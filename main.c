@@ -160,7 +160,7 @@ UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
     return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
 }
 
-UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle bkg[], size_t len){
+UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle bkg[], UINT8 len){
     /* This code peforms collision between the center of sp1 with 
        each element of bkg[] */
     UINT8 sp1_left = sp1->x;
@@ -168,12 +168,17 @@ UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle bkg[], 
     UINT8 sp1_top = sp1->y;
     UINT8 sp1_bottom = sp1->y + sp1->height;
     UINT8 collision;
+    UINT8 bkg_left;
+    UINT8 bkg_right;
+    UINT8 bkg_top;
+    UINT8 bkg_bottom;
+    UINT8 i;
 
-    for (UINT8 i; i < len; i++){
-        UINT8 bkg_left = sp2->x;
-        UINT8 bkg_right = bkg[i].x + bkg[i].width;
-        UINT8 bkg_top = bkg[i].y;
-        UINT8 bkg_bottom = bkg[i].y + bkg[i].height;
+    for (i=0; i < len; i++){
+        bkg_left = bkg[i].x;
+        bkg_right = bkg[i].x + bkg[i].width;
+        bkg_top = bkg[i].y;
+        bkg_bottom = bkg[i].y + bkg[i].height;
 
         collision = (((sp1_left >= bkg_left) && (sp1_left <= bkg_right)) && ((sp1_top >= bkg_top) && (sp1_top <= bkg_bottom))) || (((bkg_left >= sp1_left) && (bkg_left <= sp1_right)) && ((bkg_top >= sp1_top) && (bkg_top <= sp1_bottom)));
         if (collision) {
