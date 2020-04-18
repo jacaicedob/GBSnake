@@ -1,0 +1,137 @@
+; no$gmb format .sym file
+; Generated automagically by ASxxxx linker V01.75 (SDK 3.0.0)
+; Area: .  .ABS.
+00:0000 s__HEADER
+00:0000 .init
+00:0200 s__CODE
+00:09BB s__HOME
+00:0B8E s__BASE
+00:0D24 s__LIT
+00:0D24 s__GSINIT
+00:0E21 s__GSINITTAIL
+00:0E22 s__GSFINAL
+00:C000 .OAM
+00:C0A0 s__DATA
+00:C12E s__BSS
+00:C187 s__HEAP
+00:C187 s__BSEG
+00:C187 s__ISEG
+00:C187 s__XSEG
+00:C187 s__OVERLAY
+00:E000 .STACK
+00:FF80 .refresh_OAM
+; Area: _CODE
+00:0200 _wait
+00:0214 _move_snake
+00:0455 _movefood
+00:0509 _check_character_collision
+00:0694 _main
+; Area: _HEADER
+00:01D2 _exit
+; Area: _HOME
+00:09BB .set_mode
+00:09CB .remove_VBL
+00:09D1 .remove_LCD
+00:09D7 .remove_TIM
+00:09DD .remove_SIO
+00:09E3 .remove_JOY
+00:09E9 .add_VBL
+00:09EF .add_LCD
+00:09F5 .add_TIM
+00:09FB .add_SIO
+00:0A01 .add_JOY
+00:0A07 .remove_int
+00:0A27 .add_int
+00:0A43 .wait_vbl_done
+00:0A43 _wait_vbl_done
+00:0A5A _display_off
+00:0A5A .display_off
+00:0A7B .serial_IO
+00:0AAA _mode
+00:0AB3 _get_mode
+00:0AB8 _enable_interrupts
+00:0ABA _disable_interrupts
+00:0ABC _reset
+00:0ABC .reset
+00:0AC2 _set_interrupts
+00:0ACD _remove_VBL
+00:0AD8 _remove_LCD
+00:0AE3 _remove_TIM
+00:0AEE _remove_SIO
+00:0AF9 _remove_JOY
+00:0B04 _add_VBL
+00:0B0F _add_LCD
+00:0B1A _add_TIM
+00:0B25 _add_SIO
+00:0B30 _add_JOY
+00:0B3B _clock
+00:0B44 __printTStates
+00:0B45 banked_call
+00:0B5E banked_ret
+00:0B67 __initrleblock
+; Area: _BASE
+00:0B8E .set_sprite_prop
+00:0B9B _set_sprite_prop
+00:0BA6 .mv_sprite
+00:0BB5 _move_sprite
+00:0BC2 _set_win_data
+00:0BC2 _set_bkg_data
+00:0C0F _set_sprite_data
+00:0C3E .padup
+00:0C3E _waitpadup
+00:0C4E .jpad
+00:0C7B .wait_pad
+00:0C82 _joypad
+00:0C87 _waitpad
+00:0C91 .set_sprite_tile
+00:0C9E _set_sprite_tile
+00:0CA9 .delay
+00:0CE3 _delay
+00:0CEC .get_sprite_prop
+00:0CF9 _get_sprite_prop
+00:0D02 .copy_vram
+00:0D11 _get_data
+00:0D11 _set_data
+; Area: _LIT
+; Area: _GSINIT
+00:0D24 gsinit
+; Area: _GSINITTAIL
+; Area: _GSFINAL
+; Area: _DATA
+00:C0A0 _snake
+00:C0F0 _food
+00:C120 _SNAKE_MEMIND
+00:C121 _SNAKE_NTILES
+00:C122 _SNAKE_HEAD_UP
+00:C123 _SNAKE_HEAD_L
+00:C124 _SNAKE_DEAD_HEAD_UP
+00:C125 _SNAKE_DEAD_HEAD_L
+00:C126 _SNAKE_BODY
+00:C127 _FOOD_MEMIND
+00:C128 _FOOD_NTILES
+00:C129 _FOOD_BISCUIT
+00:C12A _FOOD_CARROT
+00:C12B _FOOD_TURNIP
+00:C12C _SCREEN_WIDTH
+00:C12D _SCREEN_HEIGHT
+; Area: _BSS
+00:C12E __cpu
+00:C12F .mode
+00:C130 __io_out
+00:C131 __io_in
+00:C132 __io_status
+00:C133 .vbl_done
+00:C134 __current_bank
+00:C135 _sys_time
+00:C135 .sys_time
+00:C137 .int_0x40
+00:C147 .int_0x48
+00:C157 .int_0x50
+00:C167 .int_0x58
+00:C177 .int_0x60
+; Area: _HEAP
+00:C187 _malloc_heap_start
+; Area: _OVERLAY
+; Area: _ISEG
+; Area: _BSEG
+; Area: _XSEG
