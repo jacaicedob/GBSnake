@@ -12,3 +12,10 @@ struct SnakePart {
     struct Sprite sprite;
     struct SnakePart* next;
 };
+
+struct BkgObstacle {
+    UINT8 x;
+    UINT8 y;
+    UINT8 width;
+    UINT8 height;
+};

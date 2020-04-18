@@ -146,18 +146,42 @@ void movefood(struct Sprite* food, UINT8 x, UINT8 y){
     move_sprite(food->spriteid, newx, newy);
 }
 
-UBYTE check_character_collision(struct Sprite* c1, struct Sprite* c2){
-    /* This code peforms collision between the center of c1 with c2 */
-    UINT8 c1_left = c1->x;
-    UINT8 c1_right = c1->x + c1->width;
-    UINT8 c1_top = c1->y;
-    UINT8 c1_bottom = c1->y + c1->height;
-    UINT8 c2_left = c2->x;
-    UINT8 c2_right = c2->x + c2->width;
-    UINT8 c2_top = c2->y;
-    UINT8 c2_bottom = c2->y + c2->height;
+UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
+    /* This code peforms collision between the center of sp1 with sp2 */
+    UINT8 sp1_left = sp1->x;
+    UINT8 sp1_right = sp1->x + sp1->width;
+    UINT8 sp1_top = sp1->y;
+    UINT8 sp1_bottom = sp1->y + sp1->height;
+    UINT8 sp2_left = sp2->x;
+    UINT8 sp2_right = sp2->x + sp2->width;
+    UINT8 sp2_top = sp2->y;
+    UINT8 sp2_bottom = sp2->y + sp2->height;
 
-    return (((c1_left >= c2_left) && (c1_left <= c2_right)) && ((c1_top >= c2_top) && (c1_top <= c2_bottom))) || (((c2_left >= c1_left) && (c2_left <= c1_right)) && ((c2_top >= c1_top) && (c2_top <= c1_bottom)));
+    return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
+}
+
+UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle bkg[], size_t len){
+    /* This code peforms collision between the center of sp1 with 
+       each element of bkg[] */
+    UINT8 sp1_left = sp1->x;
+    UINT8 sp1_right = sp1->x + sp1->width;
+    UINT8 sp1_top = sp1->y;
+    UINT8 sp1_bottom = sp1->y + sp1->height;
+    UINT8 collision;
+
+    for (UINT8 i; i < len; i++){
+        UINT8 bkg_left = sp2->x;
+        UINT8 bkg_right = bkg->x + bkg->width;
+        UINT8 bkg_top = bkg->y;
+        UINT8 bkg_bottom = bkg->y + bkg->height;
+
+        collision = (((sp1_left >= bkg_left) && (sp1_left <= bkg_right)) && ((sp1_top >= bkg_top) && (sp1_top <= bkg_bottom))) || (((bkg_left >= sp1_left) && (bkg_left <= sp1_right)) && ((bkg_top >= sp1_top) && (bkg_top <= sp1_bottom)));
+        if (collision) {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 void main(){
@@ -218,7 +242,7 @@ void main(){
         switch (joypad()){
             case J_UP:
                 
-                if (check_character_collision(&snake_head.sprite, &food_sprite)){
+                if (sprite_collision(&snake_head.sprite, &food_sprite)){
                     movefood(&food_sprite, -8, 8);
                     // snake_tail[tail_ind].sprite.x = snake_tail[tail_ind-1].sprite.x;
                     // snake_tail[tail_ind].sprite.y = snake_tail[tail_ind-1].sprite.y;
@@ -236,21 +260,21 @@ void main(){
             
             case J_DOWN:
                 move_snake(&snake_head, 0, 8);
-                if (check_character_collision(&snake_head.sprite, &food_sprite)){
+                if (sprite_collision(&snake_head.sprite, &food_sprite)){
                     movefood(&food_sprite, 8, -8);
                 }
                 break;
 
             case J_LEFT:
                 move_snake(&snake_head, -8, 0);
-                if (check_character_collision(&snake_head.sprite, &food_sprite)){
+                if (sprite_collision(&snake_head.sprite, &food_sprite)){
                     movefood(&food_sprite, 10, 10);
                 }
                 break;
                 
             case J_RIGHT:
                 move_snake(&snake_head, 8, 0);
-                if (check_character_collision(&snake_head.sprite, &food_sprite)){
+                if (sprite_collision(&snake_head.sprite, &food_sprite)){
                     movefood(&food_sprite, -8, 8);
                 }
                 break;
