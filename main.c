@@ -171,9 +171,9 @@ UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle bkg[], 
 
     for (UINT8 i; i < len; i++){
         UINT8 bkg_left = sp2->x;
-        UINT8 bkg_right = bkg->x + bkg->width;
-        UINT8 bkg_top = bkg->y;
-        UINT8 bkg_bottom = bkg->y + bkg->height;
+        UINT8 bkg_right = bkg[i].x + bkg[i].width;
+        UINT8 bkg_top = bkg[i].y;
+        UINT8 bkg_bottom = bkg[i].y + bkg[i].height;
 
         collision = (((sp1_left >= bkg_left) && (sp1_left <= bkg_right)) && ((sp1_top >= bkg_top) && (sp1_top <= bkg_bottom))) || (((bkg_left >= sp1_left) && (bkg_left <= sp1_right)) && ((bkg_top >= sp1_top) && (bkg_top <= sp1_bottom)));
         if (collision) {
