@@ -43,12 +43,20 @@ UINT8 FOOD_CARROT = FOOD_MEMIND + 1;
 UINT8 FOOD_TURNIP = FOOD_MEMIND + 2;
 
 void wait(UINT8 n){
-    // Interrupt-based delay. Not CPU intensive.
-    // Returns after n Vertical Blanking interrupts.
+    // Interrupt-based delay.
+    // Returns after n Vertical Blanking interrupts (screen refreshes)
     UINT8 x;
     for (x = 0; x < n; x++){
         wait_vbl_done();
     }
+}
+
+void game_over_screen(UINT8 score){
+    HIDE_SPRITES;
+    printf("\n \n \n \n \n \n \n \n ");
+    printf("    GAME OVER \n");
+    printf("     Score: %d", score);
+    // waitpad("J_START");
 }
 
 void move_snake(struct SnakePart* head, UINT8 x, UINT8 y){
@@ -149,10 +157,10 @@ void movefood(struct Sprite* food, UINT8 x, UINT8 y){
 }
 
 UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
-    /* This code peforms collision between the center of sp1 with sp2 */
-    UINT8 sp1_left = sp1->x;
-    UINT8 sp1_right = sp1->x + sp1->width;
-    UINT8 sp1_top = sp1->y;
+    /* This code peforms collision between the centers of sp1 with sp2 */
+    UINT8 sp1_left = sp1->x + sp1->width/2;
+    UINT8 sp1_right = sp1->x + sp1->width - sp1->width/2;
+    UINT8 sp1_top = sp1->y + sp1->height/2;
     UINT8 sp1_bottom = sp1->y + sp1->height;
     UINT8 sp2_left = sp2->x;
     UINT8 sp2_right = sp2->x + sp2->width;
@@ -160,6 +168,20 @@ UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
     UINT8 sp2_bottom = sp2->y + sp2->height;
 
     return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
+}
+
+UINT8 head_tail_collision(struct SnakePart* head){
+    struct SnakePart* tail = head->next;
+    UINT8 collision = 0;
+
+    while (tail != NULL){
+        if (sprite_collision(&head->sprite, &tail->sprite)) {
+            collision = 1;
+            break;
+        }
+        tail = tail->next;
+    }
+    return collision;
 }
 
 // UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle bkg[], UINT8 len){
@@ -198,6 +220,8 @@ void main(){
     UINT8 food_sprite_id = 0;
     UINT8 next_snaketail_sprite_id = 1;
     UINT8 snake_tail_ind = 0;
+    UINT8 game_over = 0;
+    UINT8 score = 0;
 
     /* Load sprite data */
     set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_round_sprite);
@@ -205,7 +229,7 @@ void main(){
     
     /* Create food sprite */
     food_sprite.x = 72;
-    food_sprite.y = 42;
+    food_sprite.y = 50;
     food_sprite.width = 8;
     food_sprite.height = 8;
     food_sprite.spriteid = food_sprite_id;
@@ -251,11 +275,13 @@ void main(){
     SHOW_SPRITES;
     DISPLAY_ON;
 
-    while(1){
+    while(!game_over){
         switch (joypad()){
             case J_UP:
+                move_snake(&snake_tail[0], 0, -8);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, -8, 8);
+                    score++;
                     if (snake_tail_ind < snake_size) {
                         snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                         snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -269,13 +295,19 @@ void main(){
                         next_snaketail_sprite_id++;
                         snake_tail_ind++;
                     }                    
-                }   
-                move_snake(&snake_tail[0], 0, -8);     
+                } 
+                else if (head_tail_collision(&snake_tail)){
+                    // Collided head with tail. End Game
+                    game_over = 1;
+                }  
+                     
                 break;
             
             case J_DOWN:
+                move_snake(&snake_tail[0], 0, 8);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, 8, -8);
+                    score++;
                     if (snake_tail_ind < snake_size) {
                         snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                         snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -290,12 +322,19 @@ void main(){
                         snake_tail_ind++;
                     }
                 }
-                move_snake(&snake_tail[0], 0, 8);
+                else if (head_tail_collision(&snake_tail)){
+                    // Collided head with tail. End Game
+                    game_over = 1;
+                }
+                
                 break;
 
             case J_LEFT:
+                move_snake(&snake_tail[0], -8, 0);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
+                    // Ate food. Increment tail.
                     movefood(&food_sprite, 10, 10);
+                    score++;
                     if (snake_tail_ind < snake_size) {
                         snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                         snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -310,12 +349,18 @@ void main(){
                         snake_tail_ind++;
                     }
                 }
-                move_snake(&snake_tail[0], -8, 0);
+                else if (head_tail_collision(&snake_tail)){
+                    // Collided head with tail. End Game
+                    game_over = 1;
+                }
+                
                 break;
                 
             case J_RIGHT:
+                move_snake(&snake_tail[0], 8, 0);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, -8, 8);
+                    score++;
                     if (snake_tail_ind < snake_size) {
                         snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                         snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -330,7 +375,11 @@ void main(){
                         snake_tail_ind++;
                     }
                 }
-                move_snake(&snake_tail[0], 8, 0);
+                else if (head_tail_collision(&snake_tail)){
+                    // Collided head with tail. End Game
+                    game_over = 1;
+                }
+                
                 break;
 
             default:
@@ -340,4 +389,5 @@ void main(){
         // wait(5);
         delay(100);
     }
+    game_over_screen(score);
 }
