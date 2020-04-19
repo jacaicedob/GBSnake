@@ -4,6 +4,8 @@
 #include "Sprite.c"
 #include "snake_round.c"
 #include "food.c"
+#include "bkg_tiles.c"
+#include "bkg_map.c"
 
 UINT8 SCREEN_L = 40;
 UINT8 SCREEN_WIDTH = 80;
@@ -236,6 +238,10 @@ void main(){
     UINT8 game_over = 0;
     UINT8 score = 0;
 
+    /* Load background */
+    set_bkg_data(0, 3, bkg_tiles);
+    set_bkg_tiles(0,0,20,18,bkg_map);
+
     /* Define background obstacles */
     bkg_obs[bkg_obs_ind].x = 72;
     bkg_obs[bkg_obs_ind].y = 64;
@@ -300,6 +306,7 @@ void main(){
     snake_tail_ind++;
 
     SHOW_SPRITES;
+    SHOW_BKG;
     DISPLAY_ON;
 
     while(!game_over){
