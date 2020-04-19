@@ -26,6 +26,6 @@
 /* Bank of tiles. */
 #define snakeBank 0
 /* Start of tile array. */
-extern unsigned char snake[];
+extern unsigned char snake_round_sprite[];
 
 /* End of SNAKE_ROUND.H */
