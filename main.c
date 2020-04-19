@@ -59,12 +59,68 @@ void game_over_screen(UINT8 score){
     // waitpad("J_START");
 }
 
-void move_snake(struct SnakePart* head, UINT8 x, UINT8 y){
+UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
+    /* This code peforms collision between the centers of sp1 with sp2 */
+    UINT8 sp1_left = sp1->x + sp1->width/2;
+    UINT8 sp1_right = sp1->x + sp1->width - sp1->width/2;
+    UINT8 sp1_top = sp1->y + sp1->height/2;
+    UINT8 sp1_bottom = sp1->y + sp1->height;
+    UINT8 sp2_left = sp2->x;
+    UINT8 sp2_right = sp2->x + sp2->width;
+    UINT8 sp2_top = sp2->y;
+    UINT8 sp2_bottom = sp2->y + sp2->height;
+
+    return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
+}
+
+UINT8 head_tail_collision(struct SnakePart* head){
+    struct SnakePart* tail = head->next;
+
+    while (tail != NULL){
+        if (sprite_collision(&head->sprite, &tail->sprite)) {
+            return 1;
+            break;
+        }
+        tail = tail->next;
+    }
+    return 0;
+}
+
+UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle* bkg){
+    /* This code peforms collision between the center of sp1 with 
+       each element of bkg */
+    UINT8 sp1_left = sp1->x + sp1->width/2;
+    UINT8 sp1_right = sp1->x + sp1->width - sp1->width/2;
+    UINT8 sp1_top = sp1->y + sp1->height/2;
+    UINT8 sp1_bottom = sp1->y + sp1->height;
+    UINT8 bkg_left;
+    UINT8 bkg_right;
+    UINT8 bkg_top;
+    UINT8 bkg_bottom;
+    UINT8 collision;
+    
+    while(bkg->next != NULL){
+        bkg_left = bkg->x;
+        bkg_right = bkg->x + bkg->width;
+        bkg_top = bkg->y;
+        bkg_bottom = bkg->y + bkg->height;
+        collision = (((sp1_left >= bkg_left) && (sp1_left <= bkg_right)) && ((sp1_top >= bkg_top) && (sp1_top <= bkg_bottom))) || (((bkg_left >= sp1_left) && (bkg_left <= sp1_right)) && ((bkg_top >= sp1_top) && (bkg_top <= sp1_bottom)));
+        if (collision) {
+            return 1;
+        }
+        bkg = bkg->next;
+    }
+
+    return 0;
+}
+
+void move_snake(struct SnakePart* head, UINT8 x, UINT8 y, struct BackgroundObstacle* bkg){
     /*
     For the snake movement, the head moves in the direction of the joypad 
     and the tail follows the head.
     */
     struct SnakePart* tail;
+    struct SnakePart new_head;
 
     // Process head movement first
     UINT8 headx = head->sprite.x;
@@ -85,6 +141,17 @@ void move_snake(struct SnakePart* head, UINT8 x, UINT8 y){
     }
     else if (newy <= SCREEN_T){
         newy = SCREEN_T + head->sprite.height;
+    }
+
+    // Check collision with background obstacles
+    new_head.sprite.x = newx;
+    new_head.sprite.y = newy;
+    new_head.sprite.width = head->sprite.width;
+    new_head.sprite.height = head->sprite.height;
+    
+    if (background_collision(&new_head.sprite, bkg)){
+        newx = SCREEN_L + SCREEN_WIDTH;//head->sprite.x;
+        newy = head->sprite.y;
     }
 
     // Load appropriate head sprites based on movement
@@ -156,77 +223,37 @@ void movefood(struct Sprite* food, UINT8 x, UINT8 y){
     move_sprite(food->spriteid, newx, newy);
 }
 
-UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
-    /* This code peforms collision between the centers of sp1 with sp2 */
-    UINT8 sp1_left = sp1->x + sp1->width/2;
-    UINT8 sp1_right = sp1->x + sp1->width - sp1->width/2;
-    UINT8 sp1_top = sp1->y + sp1->height/2;
-    UINT8 sp1_bottom = sp1->y + sp1->height;
-    UINT8 sp2_left = sp2->x;
-    UINT8 sp2_right = sp2->x + sp2->width;
-    UINT8 sp2_top = sp2->y;
-    UINT8 sp2_bottom = sp2->y + sp2->height;
-
-    return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
-}
-
-UINT8 head_tail_collision(struct SnakePart* head){
-    struct SnakePart* tail = head->next;
-    UINT8 collision = 0;
-
-    while (tail != NULL){
-        if (sprite_collision(&head->sprite, &tail->sprite)) {
-            collision = 1;
-            break;
-        }
-        tail = tail->next;
-    }
-    return collision;
-}
-
-// UBYTE background_collision(struct Sprite* sp1, struct BackgroundObstacle bkg[], UINT8 len){
-//     /* This code peforms collision between the center of sp1 with 
-//        each element of bkg[] */
-//     UINT8 sp1_left = sp1->x;
-//     UINT8 sp1_right = sp1->x + sp1->width;
-//     UINT8 sp1_top = sp1->y;
-//     UINT8 sp1_bottom = sp1->y + sp1->height;
-//     UINT8 collision;
-//     UINT8 bkg_left;
-//     UINT8 bkg_right;
-//     UINT8 bkg_top;
-//     UINT8 bkg_bottom;
-//     UINT8 i;
-
-//     for (i=0; i < len; i++){
-//         bkg_left = bkg.x;
-//         bkg_right = bkg[i].x + bkg[i].width;
-//         bkg_top = bkg[i].y;
-//         bkg_bottom = bkg[i].y + bkg[i].height;
-
-//         collision = (((sp1_left >= bkg_left) && (sp1_left <= bkg_right)) && ((sp1_top >= bkg_top) && (sp1_top <= bkg_bottom))) || (((bkg_left >= sp1_left) && (bkg_left <= sp1_right)) && ((bkg_top >= sp1_top) && (bkg_top <= sp1_bottom)));
-//         if (collision) {
-//             return 1;
-//         }
-//     }
-
-//     return 0;
-// }
-
 void main(){
     UINT8 snake_size = 20;
     struct SnakePart snake_tail[20];
     struct Sprite food_sprite;
+    struct  BackgroundObstacle bkg_obs[5];
+    
     UINT8 food_sprite_id = 0;
     UINT8 next_snaketail_sprite_id = 1;
     UINT8 snake_tail_ind = 0;
+    UINT8 bkg_obs_ind = 0;
     UINT8 game_over = 0;
     UINT8 score = 0;
+
+    /* Define background obstacles */
+    bkg_obs[bkg_obs_ind].x = 72;
+    bkg_obs[bkg_obs_ind].y = 64;
+    bkg_obs[bkg_obs_ind].width = 8;
+    bkg_obs[bkg_obs_ind].height = 8;
+    bkg_obs_ind++;
+    bkg_obs[bkg_obs_ind].x = 64;
+    bkg_obs[bkg_obs_ind].y = 72;
+    bkg_obs[bkg_obs_ind].width = 8;
+    bkg_obs[bkg_obs_ind].height = 8;
+    bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
+    bkg_obs[bkg_obs_ind].next = NULL;
+    bkg_obs_ind++;
 
     /* Load sprite data */
     set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_round_sprite);
     set_sprite_data(FOOD_MEMIND, FOOD_NTILES, food);
-    
+
     /* Create food sprite */
     food_sprite.x = 72;
     food_sprite.y = 50;
@@ -278,7 +305,7 @@ void main(){
     while(!game_over){
         switch (joypad()){
             case J_UP:
-                move_snake(&snake_tail[0], 0, -8);
+                move_snake(&snake_tail[0], 0, -8, &bkg_obs);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, -8, 8);
                     score++;
@@ -304,7 +331,7 @@ void main(){
                 break;
             
             case J_DOWN:
-                move_snake(&snake_tail[0], 0, 8);
+                move_snake(&snake_tail[0], 0, 8, &bkg_obs);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, 8, -8);
                     score++;
@@ -330,7 +357,7 @@ void main(){
                 break;
 
             case J_LEFT:
-                move_snake(&snake_tail[0], -8, 0);
+                move_snake(&snake_tail[0], -8, 0, &bkg_obs);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     // Ate food. Increment tail.
                     movefood(&food_sprite, 10, 10);
@@ -357,7 +384,7 @@ void main(){
                 break;
                 
             case J_RIGHT:
-                move_snake(&snake_tail[0], 8, 0);
+                move_snake(&snake_tail[0], 8, 0, &bkg_obs);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, -8, 8);
                     score++;
