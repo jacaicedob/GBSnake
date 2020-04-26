@@ -216,36 +216,6 @@ void move_snake(struct SnakePart* head, UINT8 x, UINT8 y, struct BackgroundObsta
     }
 }
 
-// void movefood_old(struct Sprite* food, UINT8 x, UINT8 y, struct SnakePart* snake){
-//     UINT8 newx;
-//     UINT8 newy; 
-
-//     // Get the snake's tail
-//     while(snake->next != NULL){
-//         snake = snake->next;
-//     }
-//     newx = snake->sprite.x + x;
-//     newy = snake->sprite.y + y;
-
-//     if (newx >= (SCREEN_L + SCREEN_WIDTH)){
-//         newx = SCREEN_L + SCREEN_WIDTH;
-//     }
-//     else if (newx <= (SCREEN_L + food->width)){
-//         newx = SCREEN_L + food->width;
-//     }
-
-//     if (newy >= (SCREEN_T + SCREEN_HEIGHT)){
-//         newy = SCREEN_T + SCREEN_HEIGHT;
-//     }
-//     else if (newy <= (SCREEN_T + food->height)){
-//         newy = SCREEN_T + food->height;
-//     }
-
-//     food->x = newx;
-//     food->y = newy;
-//     move_sprite(food->spriteid, newx, newy);
-// }
-
 void movefood(struct Sprite* food, struct SnakePart* snake){
     /* This function places a new food item at the location of the snake's tail tip */
     UINT8 new_spriteid;
@@ -271,7 +241,7 @@ void main(){
     UINT8 snake_size = 37;
     struct SnakePart snake_tail[37];
     struct Sprite food_sprite;
-    struct  BackgroundObstacle bkg_obs[5];
+    struct  BackgroundObstacle bkg_obs[6];
     
     UINT8 food_sprite_id = 37;
     UINT8 next_snaketail_sprite_id = 0;
@@ -282,23 +252,29 @@ void main(){
     UINT8 score_increment = 1;
 
     /* Load background */
-    set_bkg_data(0, 30, Background_data);//bkg_tiles);
+    set_bkg_data(0, 31, Background_data);//bkg_tiles);
     set_bkg_tiles(0,0,20,18,Background_map);//bkg_map);
 
     /* Define background obstacles */
-    bkg_obs[bkg_obs_ind].x = 56;
-    bkg_obs[bkg_obs_ind].y = 48;
+    bkg_obs[bkg_obs_ind].x = 64;
+    bkg_obs[bkg_obs_ind].y = 112;
     bkg_obs[bkg_obs_ind].width = 8;
     bkg_obs[bkg_obs_ind].height = 8;
     bkg_obs_ind++;
-    bkg_obs[bkg_obs_ind].x = 56;
-    bkg_obs[bkg_obs_ind].y = 56;
+    // bkg_obs[bkg_obs_ind].x = 80;
+    // bkg_obs[bkg_obs_ind].y = 112;
+    // bkg_obs[bkg_obs_ind].width = 8;
+    // bkg_obs[bkg_obs_ind].height = 8;
+    // bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
+    // bkg_obs_ind++;
+    bkg_obs[bkg_obs_ind].x = 72;
+    bkg_obs[bkg_obs_ind].y = 112;
     bkg_obs[bkg_obs_ind].width = 8;
     bkg_obs[bkg_obs_ind].height = 8;
     bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
     bkg_obs_ind++;
-    bkg_obs[bkg_obs_ind].x = 48;
-    bkg_obs[bkg_obs_ind].y = 56;
+    bkg_obs[bkg_obs_ind].x = 72;
+    bkg_obs[bkg_obs_ind].y = 104;
     bkg_obs[bkg_obs_ind].width = 8;
     bkg_obs[bkg_obs_ind].height = 8;
     bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
