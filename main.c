@@ -6,6 +6,8 @@
 #include "food.c"
 #include "bkg_tiles.c"
 #include "bkg_map.c"
+#include "Background_data.c"
+#include "Background_map.c"
 
 UINT8 SCREEN_L = 40;
 UINT8 SCREEN_WIDTH = 80;
@@ -280,8 +282,8 @@ void main(){
     UINT8 score_increment = 1;
 
     /* Load background */
-    set_bkg_data(0, 13, bkg_tiles);
-    set_bkg_tiles(0,0,20,18,bkg_map);
+    set_bkg_data(0, 30, Background_data);//bkg_tiles);
+    set_bkg_tiles(0,0,20,18,Background_map);//bkg_map);
 
     /* Define background obstacles */
     bkg_obs[bkg_obs_ind].x = 56;
