@@ -258,7 +258,7 @@ void main(){
     /* Define background obstacles */
     bkg_obs[bkg_obs_ind].x = 64;
     bkg_obs[bkg_obs_ind].y = 112;
-    bkg_obs[bkg_obs_ind].width = 8;
+    bkg_obs[bkg_obs_ind].width = 24;
     bkg_obs[bkg_obs_ind].height = 8;
     bkg_obs_ind++;
     // bkg_obs[bkg_obs_ind].x = 80;
@@ -267,12 +267,12 @@ void main(){
     // bkg_obs[bkg_obs_ind].height = 8;
     // bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
     // bkg_obs_ind++;
-    bkg_obs[bkg_obs_ind].x = 72;
-    bkg_obs[bkg_obs_ind].y = 112;
-    bkg_obs[bkg_obs_ind].width = 8;
-    bkg_obs[bkg_obs_ind].height = 8;
-    bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
-    bkg_obs_ind++;
+    // bkg_obs[bkg_obs_ind].x = 72;
+    // bkg_obs[bkg_obs_ind].y = 112;
+    // bkg_obs[bkg_obs_ind].width = 8;
+    // bkg_obs[bkg_obs_ind].height = 8;
+    // bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
+    // bkg_obs_ind++;
     bkg_obs[bkg_obs_ind].x = 72;
     bkg_obs[bkg_obs_ind].y = 104;
     bkg_obs[bkg_obs_ind].width = 8;
