@@ -243,6 +243,9 @@ void main(){
     struct Sprite food_sprite;
     struct  BackgroundObstacle bkg_obs[6];
     
+    UINT8 keypress = 0x0;
+    UINT8 jpad = 0x0;
+    UINT8 wait_loop_ind;
     UINT8 food_sprite_id = 37;
     UINT8 next_snaketail_sprite_id = 0;
     UINT8 snake_tail_ind = 0;
@@ -337,7 +340,8 @@ void main(){
     DISPLAY_ON;
 
     while(!game_over){
-        switch (joypad()){
+        keypress = joypad();
+        switch (keypress){
             case J_UP:
                 move_snake(&snake_tail[0], 0, -8, &bkg_obs[0]);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
@@ -448,8 +452,20 @@ void main(){
         }
         score_increment = (UINT8) (snake_tail_ind / 4) + 1;
 
-        wait(5);
-        // delay(100);
+        wait(4);
+        // // Interrupt-based delay.
+        // // Returns after n Vertical Blanking interrupts (screen refreshes)
+        // keypress = 0x0;
+        // for (wait_loop_ind = 0; wait_loop_ind < 5; wait_loop_ind++){
+        //     if (wait_loop_ind == 2 | wait_loop_ind == 4){
+        //         jpad = joypad();
+        //         if (jpad != 0){
+        //             keypress = jpad;
+        //         }
+        //     }
+        //     wait_vbl_done();
+        // }
+
     }
     game_over_screen(score);
 }
