@@ -63,6 +63,14 @@ void game_over_screen(UINT8 score){
     // waitpad("J_START");
 }
 
+void win_screen(UINT8 score){
+    HIDE_SPRITES;
+    printf("\n \n \n \n \n \n \n \n ");
+    printf("    YOU WIN! \n");
+    printf("     Score: %d", score);
+    // waitpad("J_START");
+}
+
 UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
     /* This code peforms collision between the centers of sp1 with sp2 */
     UINT8 sp1_left = sp1->x + sp1->width/2;
@@ -243,9 +251,11 @@ void main(){
     struct Sprite food_sprite;
     struct  BackgroundObstacle bkg_obs[6];
     
-    UINT8 keypress = 0x0;
+    UINT8 move_direction = J_UP;
     UINT8 jpad = 0x0;
     UINT8 wait_loop_ind;
+    UINT8 speed = 40;
+
     UINT8 food_sprite_id = 37;
     UINT8 next_snaketail_sprite_id = 0;
     UINT8 snake_tail_ind = 0;
@@ -340,8 +350,7 @@ void main(){
     DISPLAY_ON;
 
     while(!game_over){
-        keypress = joypad();
-        switch (keypress){
+        switch (move_direction){
             case J_UP:
                 move_snake(&snake_tail[0], 0, -8, &bkg_obs[0]);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
@@ -451,20 +460,34 @@ void main(){
                 break;
         }
         score_increment = (UINT8) (snake_tail_ind / 4) + 1;
+        
+        if (snake_tail_ind > 37){
+            win_screen(score);
+        }
+        else if (snake_tail_ind > 30){
+            speed = 15;
+        }
+        else if (snake_tail_ind > 15){
+            speed = 20;
+        }
+        else if (snake_tail_ind > 10){
+            speed = 30;
+        }
+        else if (snake_tail_ind > 5){
+            speed = 35;
+        }
 
-        wait(4);
-        // // Interrupt-based delay.
-        // // Returns after n Vertical Blanking interrupts (screen refreshes)
-        // keypress = 0x0;
-        // for (wait_loop_ind = 0; wait_loop_ind < 5; wait_loop_ind++){
-        //     if (wait_loop_ind == 2 | wait_loop_ind == 4){
-        //         jpad = joypad();
-        //         if (jpad != 0){
-        //             keypress = jpad;
-        //         }
-        //     }
-        //     wait_vbl_done();
-        // }
+        // wait(40);
+        // Interrupt-based delay.
+        // Returns after n Vertical Blanking interrupts (screen refreshes)
+        
+        for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
+            jpad = joypad();
+            if (jpad != 0){
+                move_direction = jpad;
+            }
+            wait_vbl_done();
+        }
 
     }
     game_over_screen(score);
