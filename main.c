@@ -1,5 +1,5 @@
 #include <gb/gb.h>
-#inlcude <gb/font.h>
+#include <gb/font.h>
 #include <stdio.h>
 
 #include "Sprite.c"
