@@ -1,4 +1,5 @@
 #include <gb/gb.h>
+#inlcude <gb/font.h>
 #include <stdio.h>
 
 #include "Sprite.c"
@@ -246,6 +247,7 @@ void movefood(struct Sprite* food, struct SnakePart* snake){
 }
 
 void main(){
+    font_t min_font;
     UINT8 snake_size = 37;
     struct SnakePart snake_tail[37];
     struct Sprite food_sprite;
@@ -264,9 +266,18 @@ void main(){
     UINT8 score = 0;
     UINT8 score_increment = 1;
 
+    /* Initialize font */
+    font_init();
+    min_font = font_load(font_min); // 36 tiles
+    font_set(min_font);
+
     /* Load background */
-    set_bkg_data(0, 31, Background_data);//bkg_tiles);
+    set_bkg_data(37, 31, Background_data);//bkg_tiles);
     set_bkg_tiles(0,0,20,18,Background_map);//bkg_map);
+
+    /* Load window */
+    // set_win_tiles(0,0,5,1,windowmap);
+    // move_win(7,0);
 
     /* Define background obstacles */
     bkg_obs[bkg_obs_ind].x = 64;
