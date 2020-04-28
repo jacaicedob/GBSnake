@@ -350,8 +350,7 @@ void main(){
     DISPLAY_ON;
 
     while(!game_over){
-        switch (move_direction){
-            case J_UP:
+        if ((move_direction & J_UP) == J_UP){
                 move_snake(&snake_tail[0], 0, -8, &bkg_obs[0]);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, &snake_tail[0]);
@@ -374,10 +373,8 @@ void main(){
                     // Collided head with tail. End Game
                     game_over = 1;
                 }  
-                     
-                break;
-            
-            case J_DOWN:
+        }                     
+        else if ((move_direction & J_DOWN) == J_DOWN){
                 move_snake(&snake_tail[0], 0, 8, &bkg_obs[0]);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, &snake_tail[0]);
@@ -401,9 +398,8 @@ void main(){
                     game_over = 1;
                 }
                 
-                break;
-
-            case J_LEFT:
+        }
+        else if (((move_direction & J_LEFT) == J_LEFT)){
                 move_snake(&snake_tail[0], -8, 0, &bkg_obs[0]);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     // Ate food. Increment tail.
@@ -428,9 +424,8 @@ void main(){
                     game_over = 1;
                 }
                 
-                break;
-                
-            case J_RIGHT:
+        }
+        else if (((move_direction & J_RIGHT) == J_RIGHT)){
                 move_snake(&snake_tail[0], 8, 0, &bkg_obs[0]);
                 if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
                     movefood(&food_sprite, &snake_tail[0]);
@@ -453,11 +448,6 @@ void main(){
                     // Collided head with tail. End Game
                     game_over = 1;
                 }
-                
-                break;
-
-            default:
-                break;
         }
         score_increment = (UINT8) (snake_tail_ind / 4) + 1;
         
@@ -483,7 +473,7 @@ void main(){
         
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
             jpad = joypad();
-            if (jpad != 0){
+            if (jpad != 0 && (jpad & J_A) != J_A && (jpad & J_B) != J_B && (jpad & J_SELECT) != J_SELECT){
                 move_direction = jpad;
             }
             wait_vbl_done();
