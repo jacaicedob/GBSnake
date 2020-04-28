@@ -276,8 +276,8 @@ void main(){
     set_bkg_tiles(0,0,20,18,Background_map);//bkg_map);
 
     /* Load window */
-    // set_win_tiles(0,0,5,1,windowmap);
-    // move_win(7,0);
+    set_win_tiles(0,0,5,1,windowmap);
+    move_win(7,132);
 
     /* Define background obstacles */
     bkg_obs[bkg_obs_ind].x = 64;
@@ -357,6 +357,7 @@ void main(){
     snake_tail_ind++;
 
     SHOW_BKG;
+    SHOW_WIN;
     SHOW_SPRITES;
     DISPLAY_ON;
 
