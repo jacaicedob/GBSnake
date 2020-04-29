@@ -9,6 +9,7 @@
 #include "bkg_map.c"
 #include "Background_data.c"
 #include "Background_map.c"
+#include "windowmap.c"
 
 UINT8 SCREEN_L = 40;
 UINT8 SCREEN_WIDTH = 80;
@@ -57,18 +58,36 @@ void wait(UINT8 n){
 }
 
 void game_over_screen(UINT8 score){
+    UINT8 x;
+
     HIDE_SPRITES;
-    printf("\n \n \n \n \n \n \n \n ");
-    printf("    GAME OVER \n");
-    printf("     Score: %d", score);
+    HIDE_WIN;
+    
+    for (x = 0; x < 8; x++){
+        printf("                    ");
+    }
+    printf("     GAME OVER       ");
+    printf("     Score: %d       ", score);
+    for (x =0; x < 8; x++){
+        printf("                    ");
+    }
     // waitpad("J_START");
 }
 
 void win_screen(UINT8 score){
+    UINT8 x;
+
     HIDE_SPRITES;
-    printf("\n \n \n \n \n \n \n \n ");
-    printf("    YOU WIN! \n");
-    printf("     Score: %d", score);
+    HIDE_WIN;
+    
+    for (x = 0; x < 8; x++){
+        printf("                    ");
+    }
+    printf("     YOU WIN!        ");
+    printf("     Score: %d       ", score);
+    for (x =0; x < 8; x++){
+        printf("                    ");
+    }
     // waitpad("J_START");
 }
 
@@ -246,6 +265,19 @@ void movefood(struct Sprite* food, struct SnakePart* snake){
     move_sprite(food->spriteid, food->x, food->y);
 }
 
+void score2tile(UINT8 score, UINT8* score_tiles){
+    if (score < 255){
+        score_tiles[0] = (score / 100) + 0x02;
+        score_tiles[1] = (score - (score/100)*100)/10 + 0x02;
+        score_tiles[2] = (score - (score/10)*10) + 0x02;
+    }
+    else {
+        score_tiles[0] = 0x02;
+        score_tiles[1] = 0x02;
+        score_tiles[2] = 0x02;
+    }
+}
+
 void main(){
     font_t min_font;
     UINT8 snake_size = 37;
@@ -266,6 +298,9 @@ void main(){
     UINT8 score = 0;
     UINT8 score_increment = 1;
 
+    UINT8 score_tiles[3];
+    score2tile(score, &score_tiles);
+
     /* Initialize font */
     font_init();
     min_font = font_load(font_min); // 36 tiles
@@ -276,8 +311,9 @@ void main(){
     set_bkg_tiles(0,0,20,18,Background_map);//bkg_map);
 
     /* Load window */
-    set_win_tiles(0,0,5,1,windowmap);
-    move_win(7,132);
+    set_win_tiles(0,0,6,1,scoremap);
+    set_win_tiles(7,0, 3, 1, score_tiles);
+    move_win(7,136);
 
     /* Define background obstacles */
     bkg_obs[bkg_obs_ind].x = 64;
@@ -461,22 +497,24 @@ void main(){
                     game_over = 1;
                 }
         }
-        score_increment = (UINT8) (snake_tail_ind / 4) + 1;
+        score_increment = 1; //(UINT8) (snake_tail_ind / 4) + 1;
+        score2tile(score, &score_tiles);
+        set_win_tiles(7,0, 3, 1, score_tiles);
         
         if (snake_tail_ind > 37){
             win_screen(score);
         }
         else if (snake_tail_ind > 30){
-            speed = 15;
+            speed = 25;
         }
         else if (snake_tail_ind > 15){
-            speed = 20;
-        }
-        else if (snake_tail_ind > 10){
             speed = 30;
         }
-        else if (snake_tail_ind > 5){
+        else if (snake_tail_ind > 10){
             speed = 35;
+        }
+        else if (snake_tail_ind > 5){
+            speed = 37;
         }
 
         // wait(40);
