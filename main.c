@@ -59,6 +59,18 @@ void wait(UINT8 n){
 
 void game_over_screen(UINT8 score){
     UINT8 x;
+    UINT8 y;
+
+    for (y=0; y<3; y++){
+        HIDE_SPRITES;
+        for (x=0; x<10; x++){
+            wait_vbl_done();
+        }
+        SHOW_SPRITES;
+        for (x=0; x<10; x++){
+            wait_vbl_done();
+        }
+    }
 
     HIDE_SPRITES;
     HIDE_WIN;
@@ -79,7 +91,7 @@ void win_screen(UINT8 score){
 
     HIDE_SPRITES;
     HIDE_WIN;
-    
+
     for (x = 0; x < 8; x++){
         printf("                    ");
     }
@@ -299,7 +311,11 @@ void main(){
     UINT8 score_increment = 1;
 
     UINT8 score_tiles[3];
+    UINT8 lives[3];
     score2tile(score, &score_tiles);
+    lives[0] = 0x44;
+    lives[1] = 0x44;
+    lives[2] = 0x44;
 
     /* Initialize font */
     font_init();
@@ -310,9 +326,12 @@ void main(){
     set_bkg_data(37, 31, Background_data);//bkg_tiles);
     set_bkg_tiles(0,0,20,18,Background_map);//bkg_map);
 
+    set_bkg_data(68, 1, snake_round_sprite);
+
     /* Load window */
-    set_win_tiles(0,0,6,1,scoremap);
-    set_win_tiles(7,0, 3, 1, score_tiles);
+    set_win_tiles(0, 0, 6, 1, scoremap);
+    set_win_tiles(6, 0, 3, 1, score_tiles);
+    set_win_tiles(16, 0, 3, 1, lives);
     move_win(7,136);
 
     /* Define background obstacles */
@@ -499,7 +518,7 @@ void main(){
         }
         score_increment = 1; //(UINT8) (snake_tail_ind / 4) + 1;
         score2tile(score, &score_tiles);
-        set_win_tiles(7,0, 3, 1, score_tiles);
+        set_win_tiles(6,0, 3, 1, score_tiles);
         
         if (snake_tail_ind > 37){
             win_screen(score);
