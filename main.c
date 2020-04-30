@@ -542,9 +542,24 @@ void main(){
         
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
             jpad = joypad();
-            if (jpad != 0 && (jpad & J_A) != J_A && (jpad & J_B) != J_B && (jpad & J_SELECT) != J_SELECT){
+            //if (jpad != 0 && (jpad & J_A) != J_A && (jpad & J_B) != J_B && (jpad & J_SELECT) != J_SELECT){
+            if (((jpad & 0x3) > 0) && ((move_direction & 0x3) == 0)){
+                // case where J_RIGHT or J_LEFT were pressed and
+                // snake is not already moving RIGHT or LEFT.
+                // This is valid user input.
                 move_direction = jpad;
             }
+            else if (((jpad & 0xC) > 0) && ((move_direction & 0xC) == 0)){
+                // case where J_UP or J_DOWN were pressed and
+                // snake is not already moving UP or DOWN.
+                // This is valid user input.
+                move_direction = jpad;
+            }  
+            else if ((jpad & J_START) > 0){
+                // use logic to pause game
+                move_direction = jpad;
+            }           
+            //}
             wait_vbl_done();
         }
 
