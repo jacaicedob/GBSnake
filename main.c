@@ -28,11 +28,11 @@ The snake sprite has5 8x8 tiles:
 UINT8 SNAKE_MEMIND = 0;
 UINT8 SNAKE_NTILES = 5;
 
-UINT8 SNAKE_HEAD_UP = 0 + 0;
-UINT8 SNAKE_HEAD_L = 0 + 1;
-UINT8 SNAKE_DEAD_HEAD_UP = 0 + 2;
-UINT8 SNAKE_DEAD_HEAD_L = 0 + 3;
-UINT8 SNAKE_BODY = 0 + 4;
+UINT8 SNAKE_HEAD_UP = 0 + 0;  //SNAKE_MEMIND
+UINT8 SNAKE_HEAD_L = 0 + 1;  //SNAKE_MEMIND + 1
+UINT8 SNAKE_DEAD_HEAD_UP = 0 + 2;  //SNAKE_MEMIND + 2
+UINT8 SNAKE_DEAD_HEAD_L = 0 + 3;  //SNAKE_MEMIND + 3
+UINT8 SNAKE_BODY = 0 + 4;  //SNAKE_MEMIND + 4
 
 
 /* The food sprite has 3 8x8 tiles:
@@ -41,12 +41,12 @@ UINT8 SNAKE_BODY = 0 + 4;
     index 2: turnip
 */
 /* Load the food sprite right after snake */
-UINT8 FOOD_MEMIND = 5;//SNAKE_NTILES;
+UINT8 FOOD_MEMIND = 5;  //SNAKE_NTILES;
 UINT8 FOOD_NTILES = 3;
 
-UINT8 FOOD_BISCUIT = 5;
-UINT8 FOOD_CARROT = 5 + 1;
-UINT8 FOOD_TURNIP = 5 + 2;
+UINT8 FOOD_BISCUIT = 5; //FOOD_MEMIND
+UINT8 FOOD_CARROT = 5 + 1; //FOOD_MEMIND + 1
+UINT8 FOOD_TURNIP = 5 + 2; //FOOD_MEMIND + 2
 
 void wait(UINT8 n){
     // Interrupt-based delay.
@@ -339,9 +339,9 @@ void main(){
     /* Load sprite data */
     set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_round_sprite);
     set_sprite_data(FOOD_MEMIND, FOOD_NTILES, food);
-    set_sprite_tile(food_sprite_id,FOOD_BISCUIT);
-    set_sprite_tile(food_sprite_id+1,FOOD_CARROT);
-    set_sprite_tile(food_sprite_id+2,FOOD_TURNIP);
+    set_sprite_tile(food_sprite_id, FOOD_BISCUIT);
+    set_sprite_tile(food_sprite_id+1, FOOD_CARROT);
+    set_sprite_tile(food_sprite_id+2, FOOD_TURNIP);
 
     while (1) {
         /* Reset all variables */
@@ -543,7 +543,7 @@ void main(){
                         game_over = 1;
                     }
             }
-            score_increment = 1; //(UINT8) (snake_tail_ind / 4) + 1;
+            score_increment = 1;
             score2tile(score, &score_tiles);
             set_win_tiles(6,0, 3, 1, score_tiles);
             
@@ -563,14 +563,10 @@ void main(){
             else if (snake_tail_ind > 5){
                 speed = 37;
             }
-
-            // wait(40);
-            // Interrupt-based delay.
-            // Returns after n Vertical Blanking interrupts (screen refreshes)
             
             for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
                 jpad = joypad();
-                //if (jpad != 0 && (jpad & J_A) != J_A && (jpad & J_B) != J_B && (jpad & J_SELECT) != J_SELECT){
+                
                 if (((jpad & 0x3) > 0) && ((move_direction & 0x3) == 0)){
                     // case where J_RIGHT or J_LEFT were pressed and
                     // snake is not already moving RIGHT or LEFT.
@@ -587,11 +583,11 @@ void main(){
                     // use logic to pause game
                     move_direction = jpad;
                 }           
-                //}
                 wait_vbl_done();
             }
 
         }
+
         flash_sprites();
         lives -= 1;
         if (lives == 0){
