@@ -28,11 +28,11 @@ The snake sprite has5 8x8 tiles:
 UINT8 SNAKE_MEMIND = 0;
 UINT8 SNAKE_NTILES = 5;
 
-UINT8 SNAKE_HEAD_UP = SNAKE_MEMIND + 0;
-UINT8 SNAKE_HEAD_L = SNAKE_MEMIND + 1;
-UINT8 SNAKE_DEAD_HEAD_UP = SNAKE_MEMIND + 2;
-UINT8 SNAKE_DEAD_HEAD_L = SNAKE_MEMIND + 3;
-UINT8 SNAKE_BODY = SNAKE_MEMIND + 4;
+UINT8 SNAKE_HEAD_UP = 0 + 0;
+UINT8 SNAKE_HEAD_L = 0 + 1;
+UINT8 SNAKE_DEAD_HEAD_UP = 0 + 2;
+UINT8 SNAKE_DEAD_HEAD_L = 0 + 3;
+UINT8 SNAKE_BODY = 0 + 4;
 
 
 /* The food sprite has 3 8x8 tiles:
@@ -44,9 +44,9 @@ UINT8 SNAKE_BODY = SNAKE_MEMIND + 4;
 UINT8 FOOD_MEMIND = 5;//SNAKE_NTILES;
 UINT8 FOOD_NTILES = 3;
 
-UINT8 FOOD_BISCUIT = FOOD_MEMIND;
-UINT8 FOOD_CARROT = FOOD_MEMIND + 1;
-UINT8 FOOD_TURNIP = FOOD_MEMIND + 2;
+UINT8 FOOD_BISCUIT = 5;
+UINT8 FOOD_CARROT = 5 + 1;
+UINT8 FOOD_TURNIP = 5 + 2;
 
 void wait(UINT8 n){
     // Interrupt-based delay.
@@ -57,7 +57,7 @@ void wait(UINT8 n){
     }
 }
 
-void game_over_screen(UINT8 score){
+void flash_sprites(){
     UINT8 x;
     UINT8 y;
 
@@ -71,6 +71,11 @@ void game_over_screen(UINT8 score){
             wait_vbl_done();
         }
     }
+}
+
+
+void game_over_screen(UINT8 score){
+    UINT8 x;
 
     HIDE_SPRITES;
     HIDE_WIN;
@@ -315,7 +320,8 @@ void main(){
     UINT8 score_increment = 1;
 
     UINT8 score_tiles[3];
-    UINT8 lives[3];
+    UINT8 lives_tiles[3];
+    UINT8 lives = 3;
 
     /* Initialize font */
     font_init();
@@ -325,6 +331,10 @@ void main(){
     /* Load background */
     set_bkg_data(37, 31, Background_data);
     set_bkg_data(68, 1, snake_round_sprite);
+
+    lives_tiles[0] = 0x44;
+    lives_tiles[1] = 0x44;
+    lives_tiles[2] = 0x44;
 
     /* Load sprite data */
     set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_round_sprite);
@@ -357,7 +367,6 @@ void main(){
         snake_tail_ind = 0;
         bkg_obs_ind = 0;
         game_over = 0;
-        score = 0;
         score_increment = 1;
         move_direction = J_UP;
 
@@ -365,14 +374,11 @@ void main(){
         set_bkg_tiles(0,0,20,18,Background_map);
         
         score2tile(score, &score_tiles);
-        lives[0] = 0x44;
-        lives[1] = 0x44;
-        lives[2] = 0x44;
 
         /* Load window */
         set_win_tiles(0, 0, 6, 1, scoremap);
         set_win_tiles(6, 0, 3, 1, score_tiles);
-        set_win_tiles(16, 0, 3, 1, lives);
+        set_win_tiles(16, 0, 3, 1, lives_tiles);
         move_win(7,136);
 
         /* Define background obstacles */
@@ -380,14 +386,14 @@ void main(){
         bkg_obs[bkg_obs_ind].y = 112;
         bkg_obs[bkg_obs_ind].width = 24;
         bkg_obs[bkg_obs_ind].height = 8;
-        bkg_obs_ind++;
+        bkg_obs_ind = bkg_obs_ind + 1;
         bkg_obs[bkg_obs_ind].x = 72;
         bkg_obs[bkg_obs_ind].y = 104;
         bkg_obs[bkg_obs_ind].width = 8;
         bkg_obs[bkg_obs_ind].height = 8;
         bkg_obs[bkg_obs_ind-1].next = &bkg_obs[bkg_obs_ind];
         bkg_obs[bkg_obs_ind].next = NULL;
-        bkg_obs_ind++;
+        bkg_obs_ind = bkg_obs_ind + 1;
 
         /* Create food sprite */
         food_sprite.x = 72;
@@ -586,6 +592,19 @@ void main(){
             }
 
         }
-        game_over_screen(score);
+        flash_sprites();
+        lives -= 1;
+        if (lives == 0){
+            game_over_screen(score);
+            lives = 3;
+            score = 0;
+            lives_tiles[0] = 0x44;
+            lives_tiles[1] = 0x44;
+            lives_tiles[2] = 0x44;
+        }
+        else{
+            lives_tiles[lives] = 0x0;
+        }
+        
     }
 }
