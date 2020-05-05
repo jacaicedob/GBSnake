@@ -113,13 +113,9 @@ void flash_sprites(){
 
     for (y=0; y<3; y++){
         HIDE_SPRITES;
-        for (x=0; x<10; x++){
-            wait_vbl_done();
-        }
+        wait(10);
         SHOW_SPRITES;
-        for (x=0; x<10; x++){
-            wait_vbl_done();
-        }
+        wait(10);
     }
 }
 
