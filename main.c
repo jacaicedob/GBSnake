@@ -108,7 +108,6 @@ void fadein(){
 }
 
 void flash_sprites(){
-    UINT8 x;
     UINT8 y;
 
     for (y=0; y<3; y++){
