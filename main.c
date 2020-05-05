@@ -57,6 +57,56 @@ void wait(UINT8 n){
     }
 }
 
+void fadeout(){
+    UINT8 i;
+
+    for (i=0; i<4; i++){
+        switch (i)
+        {
+        case 0:
+            BGP_REG = 0xE4;
+            break;
+
+        case 1:
+            BGP_REG = 0xF9;
+            break;
+        
+        case 2:
+            BGP_REG = 0xFE;
+            break;
+        
+        case 3:
+            BGP_REG = 0xFF;
+            break;
+        }
+        wait(10);
+    }
+
+}
+
+void fadein(){
+    UINT8 i;
+
+    for (i=0; i<3; i++){
+        switch (i)
+        {
+        case 0:
+            BGP_REG = 0xFE;
+            break;
+
+        case 1:
+            BGP_REG = 0xF9;
+            break;
+        
+        case 2:
+            BGP_REG = 0xE4;
+            break;
+        }
+        wait(10);
+    }
+
+}
+
 void flash_sprites(){
     UINT8 x;
     UINT8 y;
