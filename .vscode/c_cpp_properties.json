@@ -1,16 +1,11 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "GBDK",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/gbdk/include/"
-            ],
-            "defines": [],
-            "compilerPath": "/opt/gbdk/bin/lcc",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"
+                "/opt/gbdk/include"
+            ]
         }
     ],
     "version": 4

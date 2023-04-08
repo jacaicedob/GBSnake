@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+    {
+      "type": "shell",
+      "label": "Build ROM",
+      "command": "/opt/gbdk/bin/lcc",
+      "args": [
+        "-Wa-l -Wl-m -Wl-j --debug",
+        "${file}",
+        "-o",
+        "${fileDirname}/snake.gb"
+      ],
+      "options": {
+        "cwd": "${fileDirname}"
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "detail": "compiler: /opt/gbdk/bin/lcc"
+    }
+  ]
+}

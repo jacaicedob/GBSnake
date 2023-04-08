@@ -1,11 +1,12 @@
 #include <gb/gb.h>
+#include <stdint.h>
 
 struct Sprite {
-    UBYTE spriteid;
-    UINT8 x;
-    UINT8 y;
-    UINT8 width;
-    UINT8 height;
+    uint8_t spriteid;
+    uint8_t x;
+    uint8_t y;
+    uint8_t width;
+    uint8_t height;
 };
 
 struct SnakePart {
@@ -14,9 +15,9 @@ struct SnakePart {
 };
 
 struct BackgroundObstacle {
-    UINT8 x;
-    UINT8 y;
-    UINT8 width;
-    UINT8 height;
+    uint8_t x;
+    uint8_t y;
+    uint8_t width;
+    uint8_t height;
     struct BackgroundObstacle* next;
 };

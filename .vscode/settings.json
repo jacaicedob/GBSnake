@@ -1,6 +1,8 @@
 {
     "files.associations": {
-        "stdio.h": "c",
-        "gb.h": "c"
-    }
+      "stdio.h": "c",
+      "gb.h": "c",
+      "sprite.h": "c"
+    },
+    "cmake.configureOnOpen": false
 }
