@@ -22,30 +22,39 @@ to a C array suitable for GBDK 2020.
 
 """
 
-gb_code = {356:0, 679:1, 434:2, 64:3}  # GBSutdio sprite pallete
+gb_code_sprite = {356:0, 679:1, 434:2, 64:3}  # GBSutdio sprite pallete
 gb_code_bkg = {679:0, 434:1, 202:2, 64:3}  # GBSutdio bkg pallete
 
 gb_code = gb_code_bkg
 
 im = np.asarray(Image.open("../assets/Background.png"))
+im = im[:, :, :3]
 
 ###### IMPROVEMENT:
 ###### im = im[:,:,:3]  # Removes the alpha channel entirely
 ###### pix_sum = im.sum(axis=2)  # Add R+G+B values
 ###### Iterate over pix_sum tiles to convert into GB values
 
+pix_sum = im.sum(axis=2)
+
+# Look for the value 356 (Transparent) in pix_sum to assign the sprite dictionary
+if np.argwhere(pix_sum == 356).shape[0] > 0:
+    gb_code = gb_code_sprite
+else:
+    gb_code = gb_code_bkg
+
 for i in range(4):
   # Grab the first 8x8 tile
-  tile = im[:8,8*i:8*(i+1),:3]
+  tile = pix_sum[:8,8*i:8*(i+1)]
 
   # Print the values in the tile
   s = ""
   c_array = "const unsigned char sprite_data[] = {\n"
-  for r in range(tile.shape[0]):
+  for row in range(tile.shape[0]):
       msb = '0b'
       lsb = '0b'
-      for c in range(tile.shape[1]):
-          code = gb_code[tile[r,c].sum()]
+      for col in range(tile.shape[1]):
+          code = gb_code[tile[row,col]]
           msb += str((code & 0x2) >> 1)
           lsb += str((code & 0x1))
 
