@@ -20,6 +20,15 @@ to a C array suitable for GBDK 2020.
 48,104,50        Dark Green           2  (202)
 7,24,33            Black              3  (64)
 
+
+AsepriteValue      Palette color        GB Color Code
+-----------------------------------------------------
+      0             Transparent             0   (sprites)
+      1             Light Green            1/0  (sprites/bkgs)
+      2             Medium Green           2/1  (sprites/bkgs)
+      3             Dark Green              2   (bkgs)
+      4             Black                   3   (sprites/bkgs)
+
 """
 
 gb_code_sprite = {356:0, 679:1, 434:2, 64:3}  # GBSutdio sprite pallete
@@ -28,12 +37,9 @@ gb_code_bkg = {679:0, 434:1, 202:2, 64:3}  # GBSutdio bkg pallete
 gb_code = gb_code_bkg
 
 im = np.asarray(Image.open("../assets/Background.png"))
-im = im[:, :, :3]
 
-###### IMPROVEMENT:
-###### im = im[:,:,:3]  # Removes the alpha channel entirely
-###### pix_sum = im.sum(axis=2)  # Add R+G+B values
-###### Iterate over pix_sum tiles to convert into GB values
+if len(im.shape) > 2:
+   im = im[:, :, :3]
 
 pix_sum = im.sum(axis=2)
 
