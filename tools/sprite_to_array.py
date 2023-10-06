@@ -36,7 +36,7 @@ gb_code_bkg = {679:0, 434:1, 202:2, 64:3}  # GBSutdio bkg pallete
 
 gb_code = gb_code_bkg
 
-im = np.asarray(Image.open("../assets/Background.png"))
+im = np.asarray(Image.open("../assets/Background-export.png"))
 
 if len(im.shape) > 2:
    im = im[:, :, :3]
