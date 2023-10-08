@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from PIL import Image
-from numpy.lib.stride_tricks import as_strided
+import matplotlib.pyplot as plt
 
 """ 
 This code converts tiles with the following palettes 
@@ -84,7 +84,7 @@ def get_sprite_array(im, array_name, gb_code, debug=False):
     ntiles = int(im.size/(8*8))  # Total number of 8x8 tiles = npixels/64
     stride = int(im.shape[1]/8)
 
-    c_array = f"const unsigned char {array_name}_data[] = "
+    c_array = f"const unsigned char {array_name}_data[] = \n"
     c_array += "{\n"
     for i in range(ntiles):
         c_array += "  "
@@ -101,29 +101,126 @@ def get_sprite_array(im, array_name, gb_code, debug=False):
 
     return c_array
 
-def get_background_data_and_map(im, name, gb_code, debug=False):
+def get_background_data_and_map(im, name, gb_code, offset=37, debug=False):
     """
     Split the image into 8x8 tiles.
+
+    Only supports backgrounds of size 160x144 (1 screen)
+
+    The offset parameter defaults to 37 because the map will come after the 
+    font, which is 37 tiles. This only affects the _map array.
 
     We need to generate 2 files:
         (1) Pixel information for all unique tiles that make up the background.
         (2) Map that contains the tile index from (1) to construct the map in the PNG
+
+
+    Approach:
+        (1) Create a dictionary to hold the unique tile id (utid) as keys and the tile array as data
+        (2) Grab tile 0 and add it to the unique tiles dictionary with utid = 0
+        (3) Iterate over the remaining tiles and find duplicates, if any. 
+            (a) Add the tile index of any matches to a skip_index list
+        (4) For the remaining tiles (1 through N), 
+            (a) Check if current tile index is in skip_index list
+                 (i) Skip if tile index in skip_index
+                (ii) Repeat Steps (2) - (4)
+
     """
     ntiles = int(im.size/(8*8))  # Total number of 8x8 tiles = npixels/64
     stride = int(im.shape[1]/8)
 
-    map_inds = np.arange(ntiles)
+    skip_inds = []
+    unique_tiles = dict()
+    tileind_map = np.ones(ntiles)*np.nan  # Contains the utid for each tile in the map
+    utid = 0
 
+    for i in range(ntiles):
+      if i in skip_inds:
+          continue
 
+      irow = int(i / stride)
+      icol = i % stride
+      tile = im[8*irow:8*(irow+1),8*icol:8*(icol+1)]
+      unique_tiles[utid] = tile
+      tileind_map[i] = utid
 
+      for j in range(i+1, ntiles):
+          if j in skip_inds:
+              continue
+          
+          irow2 = int(j / stride)
+          icol2 = j % stride
+          tile2 = im[8*irow2:8*(irow2+1),8*icol2:8*(icol2+1)]
 
+          if np.sum(tile == tile2) == 64:
+              # Identical
+              skip_inds.append(j)
+              tileind_map[j] = utid
 
+      utid += 1
 
+    if debug:
+        print(tileind_map)
 
+    # Construct tile data and tile map
+    tilemap = np.zeros((8, 8*len(unique_tiles)))
+    for i in range(len(unique_tiles)):
+        tilemap[:, 8*i:8*(i+1)] = unique_tiles[i]       
+    
+    tile_data_array = get_sprite_array(tilemap, f"{filename}", gb_code, debug=True)
+    tile_data_array = tile_data_array.replace("data", "tiles")
 
+    tile_data_array = f"/*\nNumber of tiles: {len(unique_tiles)}\n*/\n\n{tile_data_array}"
+
+    if debug:
+        print(tile_data_array)
+
+    tilemap_array = f"/*\nTile map size: {stride}x{int(ntiles/stride)}\n*/\n\n"
+    tilemap_array += f"const unsigned char {filename}_map[] = \n"
+    tilemap_array += "{"
+    for i in range(ntiles):
+        if i % 20 == 0:
+           tilemap_array += "\n  "
+           
+        code = int(tileind_map[i]) + offset
+        msb = code >> 4
+        lsb = (code & 0xF)
+
+        tilemap_array += hex(msb).upper()
+        tilemap_array += hex(lsb).replace("0x", "").upper() + ","
+    
+    tilemap_array = tilemap_array[:-1] + "\n};"
+    if debug:
+        print(tilemap_array)
+
+    if debug:
+        tilemap = np.zeros((8, 8*len(unique_tiles)))
+        for i in range(len(unique_tiles)):
+            tilemap[:, 8*i:8*(i+1)] = unique_tiles[i]       
+
+        fig, ax = plt.subplots(1,2)
+        ax[0].imshow(im)
+        ax[1].imshow(tilemap)
+
+        xticks = np.arange(-0.5,im.shape[1]-0.5,8)
+        yticks = np.arange(-0.5,im.shape[0]-0.5,8)
+        ax[0].set_xticks(xticks)
+        ax[0].set_yticks(yticks)
+        ax[0].grid(color="#ff0000")
+
+        xticks = np.arange(-0.5,8*len(unique_tiles)-0.5,8)
+        yticks = np.arange(-0.5,7.5,8)
+        ax[1].set_xticks(xticks)
+        ax[1].set_yticks(yticks)
+        ax[1].grid(color="#ff0000")
+        
+        plt.grid()
+        plt.show()
+
+    return tile_data_array, tilemap_array
 
 fn_path = "../assets/Snake-spritesheet.png"
-fn_path = "../assets/Background.png"
+# fn_path = "../assets/Background.png"
 
 filename = os.path.splitext(os.path.split(fn_path)[-1])[0].lower()
 filename = filename.replace("-","_")
@@ -162,13 +259,22 @@ else:
 
 if image_type == "sprite":
     array_string = get_sprite_array(im, filename, gb_code, debug=True)
-    print(array_string)
+    header = array_string.split("\n")[0].replace(" =", ";")
+    print(header, array_string)
+    
+    with open(f"../src/{filename}_py.h", "w") as f:
+        f.write(array_string)
 
 else:
-    pass
+    background_tiles, background_map = get_background_data_and_map(im, filename, gb_code, debug=True)
+    tiles_header = background_tiles.split("\n")[0].replace(" =", ";")
+    map_header = background_map.split("\n")[0].replace(" =", ";")
+    print(tiles_header, background_tiles, map_header, background_map)
 
-
-
+    with open(f"../src/{filename}_tiles_py.h", "w") as f:
+        f.write(background_tiles)
+    with open(f"../src/{filename}_map_py.h", "w") as f:
+        f.write(background_map)
 
 # ntiles = int(im.size/(8*8))  # Total number of 8x8 tiles = npixels/64
 # rowtiles = int(im.shape[0]/8)

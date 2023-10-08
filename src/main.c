@@ -5,12 +5,15 @@
 #include <rand.h>
 
 #include "Sprite.h"
-#include "snake_round.h"
+//#include "snake_round.h"
 #include "food.h"
-#include "bkg_tiles.h"
-#include "bkg_map.h"
-#include "Background_data.h"
-#include "Background_map.h"
+// #include "bkg_tiles.h"
+// #include "bkg_map.h"
+// #include "Background_data.h"
+// #include "Background_map.h"
+#include "snake_spritesheet_py.h"
+#include "background_tiles_py.h"
+#include "background_map_py.h"
 #include "windowmap.h"
 
 #define SNAKE_MAX_SIZE 37
@@ -377,15 +380,18 @@ void main(){
     font_set(min_font);
 
     /* Load background */
-    set_bkg_data(37, 31, Background_data);
-    set_bkg_data(68, 1, snake_round_sprite);
+    // set_bkg_data(37, 31, Background_data);
+    // set_bkg_data(68, 1, snake_round_sprite);
+    set_bkg_data(37, 16, background_tiles);
+    set_bkg_data(53, 1, snake_spritesheet_data);
 
     lives_tiles[0] = 0x44;
     lives_tiles[1] = 0x44;
     lives_tiles[2] = 0x44;
 
     /* Load sprite data */
-    set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_round_sprite);
+    // set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_round_sprite);
+    set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_spritesheet_data);
     set_sprite_data(FOOD_MEMIND, FOOD_NTILES, food);
     set_sprite_tile(food_sprite_id, FOOD_BISCUIT);
     set_sprite_tile(food_sprite_id+1, FOOD_CARROT);
@@ -411,7 +417,8 @@ void main(){
         move_direction = J_UP;
 
         /* Main code */
-        set_bkg_tiles(0,0,20,18,Background_map);
+        //set_bkg_tiles(0,0,20,18,Background_map);
+        set_bkg_tiles(0,0,20,18,background_map);
         
         score2tile(score, score_tiles);
         // score2tile(score, &score_tiles);
