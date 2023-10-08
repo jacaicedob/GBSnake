@@ -112,7 +112,7 @@ plt.show()
 s = "unsigned char background_colliders [] = \n{"
 for ind in range(collisions.shape[0]):
     value = hex(int(collisions[ind]))
-    if ind % 10 == 0:
+    if ind % 20 == 0:
       s += f"\n  {value}, "
         
     else:
@@ -121,5 +121,5 @@ s = s[:-1]
 s += "\n};"
 
 # print(s)
-with open(f"../src/{os.path.splitext(filename)[0]}_colliders.h", "w") as f:
+with open(f"../src/{os.path.splitext(filename.lower())[0]}_colliders.h", "w") as f:
    f.write(s)
