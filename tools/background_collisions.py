@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 
-collisions = np.zeros(20*18)
+collisions = np.zeros((20)*(18+2))
 stride = 20  # Line width in tile index
 
 def clear_collision_blocks():
@@ -87,11 +87,14 @@ def onclick(event):
 
 filename = "Background.png"
 root_path = r"../assets"
-img = Image.open(os.path.join(root_path, filename))
+img_open = Image.open(os.path.join(root_path, filename))
+
+img = np.zeros((160,160,4), dtype=int)
+img[8:8+144, ] = np.asarray(img_open).astype(int)
 
 # Divide the display (160x144) into 8x8 tiles
 xticks = np.arange(0,160,8)
-yticks = np.arange(0,144,8)
+yticks = np.arange(0,144+16,8)
 
 fig = plt.figure()
 plt.imshow(img)
@@ -117,7 +120,8 @@ for ind in range(collisions.shape[0]):
         
     else:
       s += f"{value}, "
-s = s[:-1]
+
+s = s[:-2]
 s += "\n};"
 
 # print(s)
