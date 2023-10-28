@@ -5,8 +5,9 @@ struct Sprite {
     uint8_t spriteid;
     uint8_t x;
     uint8_t y;
-    uint8_t width;
-    uint8_t height;
+    uint8_t size;
+    // uint8_t width;
+    // uint8_t height;
 };
 
 struct SnakePart {
@@ -17,7 +18,8 @@ struct SnakePart {
 struct BackgroundObstacle {
     uint8_t x;
     uint8_t y;
-    uint8_t width;
-    uint8_t height;
+    uint8_t size;
+    // uint8_t width;
+    // uint8_t height;
     struct BackgroundObstacle* next;
 };

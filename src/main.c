@@ -41,6 +41,7 @@ uint8_t SNAKE_HEAD_L = 0 + 1;  //SNAKE_MEMIND + 1
 uint8_t SNAKE_DEAD_HEAD_UP = 0 + 2;  //SNAKE_MEMIND + 2
 uint8_t SNAKE_DEAD_HEAD_L = 0 + 3;  //SNAKE_MEMIND + 3
 uint8_t SNAKE_BODY = 0 + 4;  //SNAKE_MEMIND + 4
+uint8_t SNAKE_SPRITE_SIZE = 8;
 
 
 /* The food sprite has 3 8x8 tiles:
@@ -55,6 +56,18 @@ uint8_t FOOD_NTILES = 3;
 uint8_t FOOD_BISCUIT = 5; //FOOD_MEMIND
 uint8_t FOOD_CARROT = 5 + 1; //FOOD_MEMIND + 1
 uint8_t FOOD_TURNIP = 5 + 2; //FOOD_MEMIND + 2
+uint8_t FOOD_SPRITE_SIZE = 8;
+
+/*
+Level start locations
+*/
+uint8_t LEVEL1_STARTX = 80;
+uint8_t LEVEL1_STARTY = 80;
+uint8_t LEVEL1_FOOD_STARTX = 72;
+uint8_t LEVEL1_FOOD_STARTY = 50;
+
+
+
 
 void wait(uint8_t n){
     // Interrupt-based delay.
@@ -165,14 +178,14 @@ void win_screen(uint8_t score){
 
 UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
     /* This code peforms collision between the centers of sp1 with sp2 */
-    uint8_t sp1_left = sp1->x + sp1->width/2;
-    uint8_t sp1_right = sp1->x + sp1->width - sp1->width/2;
-    uint8_t sp1_top = sp1->y + sp1->height/2;
-    uint8_t sp1_bottom = sp1->y + sp1->height;
+    uint8_t sp1_left = sp1->x + sp1->size/2;
+    uint8_t sp1_right = sp1->x + sp1->size - sp1->size/2;
+    uint8_t sp1_top = sp1->y + sp1->size/2;
+    uint8_t sp1_bottom = sp1->y + sp1->size;
     uint8_t sp2_left = sp2->x;
-    uint8_t sp2_right = sp2->x + sp2->width;
+    uint8_t sp2_right = sp2->x + sp2->size;
     uint8_t sp2_top = sp2->y;
-    uint8_t sp2_bottom = sp2->y + sp2->height;
+    uint8_t sp2_bottom = sp2->y + sp2->size;
 
     return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
 }
@@ -235,14 +248,14 @@ void move_snake(struct SnakePart* head, int8_t x, int8_t y, char* background_col
         newx = SCREEN_LEFT + SCREEN_WIDTH;
     }
     else if (newx <= SCREEN_LEFT){
-        newx = SCREEN_LEFT + head->sprite.width;
+        newx = SCREEN_LEFT + head->sprite.size;
     }
 
     if (newy >= (SCREEN_TOP + SCREEN_HEIGHT)){
         newy = SCREEN_TOP + SCREEN_HEIGHT;
     }
     else if (newy <= SCREEN_TOP){
-        newy = SCREEN_TOP + head->sprite.height;
+        newy = SCREEN_TOP + head->sprite.size;
     }
 
     // Check collision with background obstacles    
@@ -406,18 +419,16 @@ void main(){
 
         /* Create food sprite */
         // Add code to randomly generate the x,y coordinates of the food. Copy to other places where we spawn new food.
-        food_sprite.x = 72;
-        food_sprite.y = 50;
-        food_sprite.width = 8;
-        food_sprite.height = 8;
+        food_sprite.x = LEVEL1_FOOD_STARTX;
+        food_sprite.y = LEVEL1_FOOD_STARTY;
+        food_sprite.size = FOOD_SPRITE_SIZE;
         food_sprite.spriteid = food_sprite_id;
         move_sprite(food_sprite.spriteid, food_sprite.x, food_sprite.y);
         
         /* Create Snake head at index 0 of snake_tail array*/
-        snake_tail[snake_tail_ind].sprite.x = 80;
-        snake_tail[snake_tail_ind].sprite.y = 80;
-        snake_tail[snake_tail_ind].sprite.width = 8;
-        snake_tail[snake_tail_ind].sprite.height = 8;
+        snake_tail[snake_tail_ind].sprite.x = LEVEL1_STARTX;
+        snake_tail[snake_tail_ind].sprite.y = LEVEL1_STARTY;
+        snake_tail[snake_tail_ind].sprite.size = SNAKE_SPRITE_SIZE;
         snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
         set_sprite_tile(next_snaketail_sprite_id,SNAKE_HEAD_UP);
         move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
@@ -425,10 +436,9 @@ void main(){
         snake_tail_ind++;
 
         /* Create snake tail */
-        snake_tail[snake_tail_ind].sprite.x = 80;
-        snake_tail[snake_tail_ind].sprite.y = 80+8;
-        snake_tail[snake_tail_ind].sprite.width = 8;
-        snake_tail[snake_tail_ind].sprite.height = 8;
+        snake_tail[snake_tail_ind].sprite.x = LEVEL1_STARTX;
+        snake_tail[snake_tail_ind].sprite.y = LEVEL1_STARTY + SNAKE_SPRITE_SIZE;
+        snake_tail[snake_tail_ind].sprite.size = SNAKE_SPRITE_SIZE;
         snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
         set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
         move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
@@ -436,10 +446,9 @@ void main(){
         next_snaketail_sprite_id++;
         snake_tail_ind++;   
         
-        snake_tail[snake_tail_ind].sprite.x = 80;
-        snake_tail[snake_tail_ind].sprite.y = 80+16;
-        snake_tail[snake_tail_ind].sprite.width = 8;
-        snake_tail[snake_tail_ind].sprite.height = 8;
+        snake_tail[snake_tail_ind].sprite.x = LEVEL1_STARTX;
+        snake_tail[snake_tail_ind].sprite.y = LEVEL1_STARTY + 2*SNAKE_SPRITE_SIZE;
+        snake_tail[snake_tail_ind].sprite.size = SNAKE_SPRITE_SIZE;
         snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
         set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
         move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
@@ -462,8 +471,7 @@ void main(){
                         if (snake_tail_ind < snake_size) {
                             snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                             snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                            snake_tail[snake_tail_ind].sprite.width = snake_tail[snake_tail_ind-1].sprite.width;
-                            snake_tail[snake_tail_ind].sprite.height = snake_tail[snake_tail_ind-1].sprite.height;
+                            snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
                             snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
                             set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
                             move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
@@ -487,8 +495,7 @@ void main(){
                         if (snake_tail_ind < snake_size) {
                             snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                             snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                            snake_tail[snake_tail_ind].sprite.width = snake_tail[snake_tail_ind-1].sprite.width;
-                            snake_tail[snake_tail_ind].sprite.height = snake_tail[snake_tail_ind-1].sprite.height;
+                            snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
                             snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
                             set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
                             move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
@@ -514,8 +521,7 @@ void main(){
                         if (snake_tail_ind < snake_size) {
                             snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                             snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                            snake_tail[snake_tail_ind].sprite.width = snake_tail[snake_tail_ind-1].sprite.width;
-                            snake_tail[snake_tail_ind].sprite.height = snake_tail[snake_tail_ind-1].sprite.height;
+                            snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
                             snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
                             set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
                             move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
@@ -540,8 +546,7 @@ void main(){
                         if (snake_tail_ind < snake_size) {
                             snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                             snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                            snake_tail[snake_tail_ind].sprite.width = snake_tail[snake_tail_ind-1].sprite.width;
-                            snake_tail[snake_tail_ind].sprite.height = snake_tail[snake_tail_ind-1].sprite.height;
+                            snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
                             snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
                             set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
                             move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
