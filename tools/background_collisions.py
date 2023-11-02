@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 
-collisions = np.zeros((20)*(18+2))
+collisions = np.zeros((20)*(18))
+# stride = 22  # Line width in tile index
 stride = 20  # Line width in tile index
 
 def clear_collision_blocks():
@@ -89,12 +90,16 @@ filename = "Background.png"
 root_path = r"../assets"
 img_open = Image.open(os.path.join(root_path, filename))
 
-img = np.zeros((160,160,4), dtype=int)
-img[8:8+144, ] = np.asarray(img_open).astype(int)
+# img = np.zeros((176,176,4), dtype=int)
+# img[16:16+144, 8:8+160] = np.asarray(img_open).astype(int)
+img = np.asarray(img_open).astype(int)
 
-# Divide the display (160x144) into 8x8 tiles
+# Divide the display (176x176) into 8x8 tiles
+# xticks = np.arange(0,176,8)
+# yticks = np.arange(0,176,8)
+
 xticks = np.arange(0,160,8)
-yticks = np.arange(0,144+16,8)
+yticks = np.arange(0,144,8)
 
 fig = plt.figure()
 plt.imshow(img)
@@ -115,7 +120,7 @@ plt.show()
 s = "unsigned char background_colliders [] = \n{"
 for ind in range(collisions.shape[0]):
     value = hex(int(collisions[ind]))
-    if ind % 20 == 0:
+    if ind % stride == 0:
       s += f"\n  {value}, "
         
     else:
