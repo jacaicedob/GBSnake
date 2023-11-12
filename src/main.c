@@ -211,7 +211,7 @@ UBYTE background_collision(uint8_t x, uint8_t y, char* bkg_colliders, uint8_t* d
     The sprite y coordinate in OAM is 16 pixels higher than the bkg_colliders coordinates.
     */
   uint8_t collision;
-  uint8_t tileind;
+  uint16_t tileind;
   uint8_t stride = 20;
 
   uint8_t x_tile;
