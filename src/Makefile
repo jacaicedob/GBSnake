@@ -1,5 +1,6 @@
 CC	= /opt/gbdk/bin/lcc
-CFLAGS = -Wa-l -Wl-m -Wl-j --debug
+# CFLAGS = -Wa-l -Wl-m -Wl-j --debug
+CFLAGS = -Wa-l -Wl-m -Wl-j 
 
 BINS	= ../build/snake.gb
 
