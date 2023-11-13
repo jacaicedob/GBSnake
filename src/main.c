@@ -7,10 +7,20 @@
 #include "Sprite.h"
 #include "food.h"
 #include "snake_spritesheet_py.h"
-#include "background_tiles_py.h"
-#include "background_map_py.h"
-#include "background_colliders.h"
 #include "windowmap.h"
+
+#include "level1_tiles_py.h"
+#include "level1_map_py.h"
+#include "level1_colliders.h"
+#include "level2_tiles_py.h"
+#include "level2_map_py.h"
+#include "level2_colliders.h"
+#include "level3_tiles_py.h"
+#include "level3_map_py.h"
+#include "level3_colliders.h"
+#include "level4_tiles_py.h"
+#include "level4_map_py.h"
+#include "level4_colliders.h"
 
 #define SNAKE_MAX_SIZE 37
 
@@ -382,6 +392,7 @@ void score2tile(uint8_t score, uint8_t* score_tiles){
 void main(){
   struct SnakePart* tmphead;
   font_t min_font;
+  uint8_t font_tilemap_offset = 37;
   uint8_t snake_size = SNAKE_MAX_SIZE;
   struct SnakePart snake_tail[SNAKE_MAX_SIZE];
   struct Sprite food_sprite;
@@ -402,7 +413,18 @@ void main(){
   uint8_t lives_tiles[3];
   uint8_t lives = 3;
   
+  unsigned char* level_tiles;
+  unsigned char* level_map;
+  unsigned char* background_colliders;
+  short level_ntiles;
+  
   uint8_t debug_tiles [2] = {0x0, 0x0};
+
+  /* Load Level */
+  level_tiles = level1_tiles;
+  level_map = level1_map;
+  background_colliders = level1_background_colliders;
+  level_ntiles = level1_ntiles;
 
   /* Initialize font */
   font_init();
@@ -410,12 +432,12 @@ void main(){
   font_set(min_font);
 
   /* Load background */
-  set_bkg_data(37, 16, background_tiles);
-  set_bkg_data(53, 1, snake_spritesheet_data);
+  set_bkg_data(font_tilemap_offset, level_ntiles, level_tiles);
+  set_bkg_data(font_tilemap_offset+level_ntiles, 1, snake_spritesheet_data);
 
-  lives_tiles[0] = 0x35;
-  lives_tiles[1] = 0x35;
-  lives_tiles[2] = 0x35;
+  lives_tiles[0] = font_tilemap_offset+level_ntiles;
+  lives_tiles[1] = font_tilemap_offset+level_ntiles;
+  lives_tiles[2] = font_tilemap_offset+level_ntiles;
 
   /* Load sprite data */
   set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_spritesheet_data);
@@ -443,7 +465,7 @@ void main(){
     move_direction = J_UP;
 
     /* Main code */
-    set_bkg_tiles(0,0,20,18,background_map);
+    set_bkg_tiles(0, 0, 20, 18, level_map);
     
     score2tile(score, score_tiles);
     // score2tile(score, &score_tiles);
@@ -636,7 +658,7 @@ void main(){
       score2tile(score, score_tiles);
       set_win_tiles(6,0, 3, 1, score_tiles);
       
-      if (snake_tail_ind > 37){
+      if (snake_tail_ind >= snake_size){
         win_screen(score);
         game_over = 1;
       }
@@ -682,9 +704,9 @@ void main(){
       game_over_screen(score);
       lives = 3;
       score = 0;
-      lives_tiles[0] = 0x35;
-      lives_tiles[1] = 0x35;
-      lives_tiles[2] = 0x35;
+      lives_tiles[0] = font_tilemap_offset+level_ntiles;
+      lives_tiles[1] = font_tilemap_offset+level_ntiles;
+      lives_tiles[2] = font_tilemap_offset+level_ntiles;
 
       debug_tiles[0] = 0x0;
       debug_tiles[1] = 0x0;
