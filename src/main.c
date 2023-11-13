@@ -234,7 +234,7 @@ UBYTE background_collision(uint8_t x, uint8_t y, char* bkg_colliders, uint8_t* d
   return collision;
 }
 
-void move_snake(struct SnakePart* head, int8_t x, int8_t y, char* background_colliders){
+void move_snake(struct SnakePart* head, int8_t x, int8_t y){
   /*
   For the snake movement, the head moves in the direction of the joypad 
   and the tail follows the head.
@@ -510,7 +510,7 @@ void main(){
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
-          move_snake(&snake_tail[0], 0, -8, &background_colliders[0]);
+          move_snake(&snake_tail[0], 0, -8);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
             movefood(&food_sprite, background_colliders, debug_tiles);
             score = score + score_increment;
@@ -542,7 +542,7 @@ void main(){
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
-          move_snake(&snake_tail[0], 0, 8, &background_colliders[0]);
+          move_snake(&snake_tail[0], 0, 8);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
             movefood(&food_sprite, background_colliders, debug_tiles); 
             score = score + score_increment;
@@ -574,7 +574,7 @@ void main(){
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
-          move_snake(&snake_tail[0], -8, 0, &background_colliders[0]);
+          move_snake(&snake_tail[0], -8, 0);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
             // Ate food. Increment tail.
             movefood(&food_sprite, background_colliders, debug_tiles);
@@ -607,7 +607,7 @@ void main(){
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
-          move_snake(&snake_tail[0], 8, 0, &background_colliders[0]);
+          move_snake(&snake_tail[0], 8, 0);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
             movefood(&food_sprite, background_colliders, debug_tiles);
             score = score + score_increment;
