@@ -66,6 +66,7 @@ uint8_t LEVEL1_STARTY = 80;
 uint8_t LEVEL1_FOOD_STARTX = 72;
 uint8_t LEVEL1_FOOD_STARTY = 50;
 
+void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady);
 
 
 
@@ -136,7 +137,6 @@ void flash_sprites(){
       wait(10);
     }
 }
-
 
 void game_over_screen(uint8_t score){
   uint8_t x;
@@ -239,7 +239,6 @@ void move_snake(struct SnakePart* head, int8_t x, int8_t y, char* background_col
   For the snake movement, the head moves in the direction of the joypad 
   and the tail follows the head.
   */
-  struct SnakePart* tail;
 
   // Process head movement first
   uint8_t headx;
@@ -289,6 +288,13 @@ void move_snake(struct SnakePart* head, int8_t x, int8_t y, char* background_col
   head->sprite.x = newx;
   head->sprite.y = newy;
   move_sprite(head->sprite.spriteid, head->sprite.x, head->sprite.y);
+  move_tail(head, headx, heady);
+}
+
+void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady){
+  struct SnakePart* tail;
+  uint8_t newx;
+  uint8_t newy;
 
   //Process tail
   tail = head->next;
@@ -501,6 +507,7 @@ void main(){
         // Check collision with background obstacles    
         if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y-4, background_colliders, debug_tiles)){
           game_over = 1;
+          move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
           move_snake(&snake_tail[0], 0, -8, &background_colliders[0]);
@@ -532,6 +539,7 @@ void main(){
         set_win_tiles(10, 0, 2, 1, debug_tiles);
         if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y+12, background_colliders, debug_tiles)){
           game_over = 1;
+          move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
           move_snake(&snake_tail[0], 0, 8, &background_colliders[0]);
@@ -563,6 +571,7 @@ void main(){
         set_win_tiles(10, 0, 2, 1, debug_tiles);
         if (background_collision(snake_tail[0].sprite.x-4, snake_tail[0].sprite.y, background_colliders, debug_tiles)){
           game_over = 1;
+          move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
           move_snake(&snake_tail[0], -8, 0, &background_colliders[0]);
@@ -595,6 +604,7 @@ void main(){
         set_win_tiles(10, 0, 2, 1, debug_tiles);
         if (background_collision(snake_tail[0].sprite.x+12, snake_tail[0].sprite.y, background_colliders, debug_tiles)){
           game_over = 1;
+          move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
           move_snake(&snake_tail[0], 8, 0, &background_colliders[0]);
