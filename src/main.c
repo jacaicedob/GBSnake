@@ -313,9 +313,40 @@ void move_snake(struct SnakePart* head, int8_t x, int8_t y, char* background_col
   }
 }
 
-void movefood(struct Sprite* food, struct SnakePart* snake){
+void movefood(struct Sprite* food, char* bkg_colliders, uint8_t* debug_tiles){
     /* This function places a new food item at the location of the snake's tail tip */
     uint8_t new_spriteid;
+
+    uint8_t randx;
+    uint8_t randy;
+
+    do {
+      randx = rand();
+      randy = rand();
+
+      // Add the upper and lower nibbles but restrict answer to 4 bits.
+      randx = ((randx >> 4) + (randx & 0xF)) & 0xF;
+      randy = ((randy >> 4) + (randy & 0xF)) & 0xF;
+
+      // Check for world boundaries
+      if (randx > 14){
+        randx = randx - 14 + 5;
+      }
+      else if (randx < 5){
+        randx = randx + 5;
+      }
+
+      if (randy > 13){
+        randy = randy - 13 + 4;
+      }
+      else if (randy < 4){
+        randy = randy + 4;
+      }
+
+      // Convert to display x,y values
+      randx = randx*8 + 8;
+      randy = randy*8 + 16;
+    } while (background_collision(randx, randy, bkg_colliders, debug_tiles));
 
     new_spriteid = food->spriteid+1;
     if (new_spriteid > 39){
@@ -324,13 +355,8 @@ void movefood(struct Sprite* food, struct SnakePart* snake){
     move_sprite(food->spriteid, 0, 0);
     food->spriteid = new_spriteid;
 
-    // Get the snake's tail
-    while(snake->next != NULL){
-      snake = snake->next;
-    }
-
-    food->x = snake->sprite.x;
-    food->y = snake->sprite.y;
+    food->x = randx;
+    food->y = randy; 
     move_sprite(food->spriteid, food->x, food->y);
 }
 
@@ -479,7 +505,7 @@ void main(){
         else {
           move_snake(&snake_tail[0], 0, -8, &background_colliders[0]);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-            movefood(&food_sprite, &snake_tail[0]);
+            movefood(&food_sprite, background_colliders, debug_tiles);
             score = score + score_increment;
             if (snake_tail_ind < snake_size) {
               snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
@@ -510,7 +536,7 @@ void main(){
         else {
           move_snake(&snake_tail[0], 0, 8, &background_colliders[0]);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-            movefood(&food_sprite, &snake_tail[0]);
+            movefood(&food_sprite, background_colliders, debug_tiles); 
             score = score + score_increment;
             if (snake_tail_ind < snake_size) {
               snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
@@ -542,7 +568,7 @@ void main(){
           move_snake(&snake_tail[0], -8, 0, &background_colliders[0]);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
             // Ate food. Increment tail.
-            movefood(&food_sprite, &snake_tail[0]);
+            movefood(&food_sprite, background_colliders, debug_tiles);
             score++;
             if (snake_tail_ind < snake_size) {
               snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
@@ -573,7 +599,7 @@ void main(){
         else {
           move_snake(&snake_tail[0], 8, 0, &background_colliders[0]);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-            movefood(&food_sprite, &snake_tail[0]);
+            movefood(&food_sprite, background_colliders, debug_tiles);
             score = score + score_increment;
             if (snake_tail_ind < snake_size) {
               snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
