@@ -176,6 +176,7 @@ def get_background_data_and_map(im, name, gb_code, offset=37, debug=False):
         print(tile_data_array)
 
     tilemap_array = f"/*\nTile map size: {stride}x{int(ntiles/stride)}\n*/\n\n"
+    tilemap_array += f"short {filename}_ntiles = {len(unique_tiles)};\n"
     tilemap_array += f"const unsigned char {filename}_map[] = \n"
     tilemap_array += "{"
     for i in range(ntiles):
@@ -219,8 +220,9 @@ def get_background_data_and_map(im, name, gb_code, offset=37, debug=False):
 
     return tile_data_array, tilemap_array
 
-fn_path = "../assets/Snake-spritesheet.png"
+# fn_path = "../assets/Snake-spritesheet.png"
 # fn_path = "../assets/Background.png"
+fn_path = "../assets/Level4.png"
 
 filename = os.path.splitext(os.path.split(fn_path)[-1])[0].lower()
 filename = filename.replace("-","_")
