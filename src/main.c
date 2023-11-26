@@ -952,8 +952,14 @@ void main(){
             move_direction = input;
           }  
           else if ((input & J_START) > 0){
-            // use logic to pause game
-            move_direction = input;
+            // PAUSE GAME. Resume with the old direction.
+            waitpadup();
+            waitpad(J_START);
+            waitpadup();
+            move_direction = old_direction;
+            break;
+            // // use logic to pause game
+            // move_direction = input;
           }           
           wait_vbl_done();
         }
