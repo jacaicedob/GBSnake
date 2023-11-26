@@ -202,18 +202,44 @@ void win_screen(uint8_t score){
   waitpadup();
 }
 
+UBYTE sprite_collision_coord(struct Sprite* sp1, uint8_t x, uint8_t y){
+  /* This code peforms collision between the centers of sp1 with sp2 */
+  uint8_t sp1_xcenter = sp1->x + sp1->size/2;
+  uint8_t sp1_ycenter = sp1->y + sp1->size/2;
+  uint8_t sp1_xtile = (sp1_xcenter - 8) / 8;
+  uint8_t sp1_ytile = (sp1_ycenter - 16) / 8;
+
+  uint8_t sp2_xcenter = x + sp1->size/2;
+  uint8_t sp2_ycenter = y + sp1->size/2;
+  uint8_t sp2_xtile = (sp2_xcenter - 8) / 8;
+  uint8_t sp2_ytile = (sp2_ycenter - 16) / 8;
+
+  return ((sp1_xtile == sp2_xtile) & (sp1_ytile == sp2_ytile));
+}
 UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
   /* This code peforms collision between the centers of sp1 with sp2 */
-  uint8_t sp1_left = sp1->x + sp1->size/2;
-  uint8_t sp1_right = sp1->x + sp1->size - sp1->size/2;
-  uint8_t sp1_top = sp1->y + sp1->size/2;
-  uint8_t sp1_bottom = sp1->y + sp1->size;
-  uint8_t sp2_left = sp2->x;
-  uint8_t sp2_right = sp2->x + sp2->size;
-  uint8_t sp2_top = sp2->y;
-  uint8_t sp2_bottom = sp2->y + sp2->size;
+  uint8_t sp1_xcenter = sp1->x + sp1->size/2;
+  uint8_t sp1_ycenter = sp1->y + sp1->size/2;
+  uint8_t sp1_xtile = (sp1_xcenter - 8) / 8;
+  uint8_t sp1_ytile = (sp1_ycenter - 16) / 8;
 
-  return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
+  uint8_t sp2_xcenter = sp2->x + sp2->size/2;
+  uint8_t sp2_ycenter = sp2->y + sp2->size/2;
+  uint8_t sp2_xtile = (sp2_xcenter - 8) / 8;
+  uint8_t sp2_ytile = (sp2_ycenter - 16) / 8;
+
+  return ((sp1_xtile == sp2_xtile) & (sp1_ytile == sp2_ytile));
+
+  // uint8_t sp1_left = sp1->x + sp1->size/2;
+  // uint8_t sp1_right = sp1->x + sp1->size - sp1->size/2;
+  // uint8_t sp1_top = sp1->y + sp1->size/2;
+  // uint8_t sp1_bottom = sp1->y + sp1->size;
+  // uint8_t sp2_left = sp2->x;
+  // uint8_t sp2_right = sp2->x + sp2->size;
+  // uint8_t sp2_top = sp2->y;
+  // uint8_t sp2_bottom = sp2->y + sp2->size;
+
+  // return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
 }
 
 uint8_t head_tail_collision(struct SnakePart* head){
@@ -225,6 +251,17 @@ uint8_t head_tail_collision(struct SnakePart* head){
       break;
     }
     tail = tail->next;
+  }
+  return 0;
+}
+
+UBYTE head_tail_collision_coord(struct SnakePart* head, uint8_t x, uint8_t y){
+  while (head != NULL){
+    if (sprite_collision_coord(&head->sprite, x, y)) {
+      return 1;
+      break;
+    }
+    head = head->next;
   }
   return 0;
 }
@@ -347,9 +384,10 @@ void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady){
   }
 }
 
-void movefood(struct Sprite* food, char* bkg_colliders, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles, unsigned char key){
+void movefood(struct Sprite* food, struct SnakePart* head, char* bkg_colliders, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles, unsigned char key){
     initrand(DIV_REG);
     /* This function places a new food item at the location of the snake's tail tip */
+    uint8_t collision;
     uint8_t new_spriteid;
 
     uint8_t randx;
@@ -381,7 +419,11 @@ void movefood(struct Sprite* food, char* bkg_colliders, short lbound, short rbou
       // Convert to display x,y values
       randx = randx*8 + 8;
       randy = randy*8 + 16;
-    } while (background_collision(randx, randy, bkg_colliders, debug_tiles));
+      
+      collision = background_collision(randx, randy, bkg_colliders, debug_tiles);
+      collision = collision || head_tail_collision_coord(head, randx, randy);
+      
+    } while (collision != 0);
 
     if (key){
       new_spriteid = 39;
@@ -604,7 +646,7 @@ void main(){
       set_bkg_data(font_tilemap_offset, level_ntiles, level_tiles);
       set_bkg_data(font_tilemap_offset+level_ntiles, 1, snake_spritesheet_data);
 
-      for (char i = 0; i < lives; i++){
+      for (uint8_t i = 0; i < lives; i++){
         lives_tiles[i] = font_tilemap_offset+level_ntiles;
       }
 
@@ -727,7 +769,7 @@ void main(){
             move_snake(&snake_tail[0], 0, -8);
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
               if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
+                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
                 score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -762,7 +804,7 @@ void main(){
             move_snake(&snake_tail[0], 0, 8);
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
               if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0); 
+                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0); 
                 score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -798,7 +840,7 @@ void main(){
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
               // Ate food. Increment tail.
               if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
+                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
                 score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -833,7 +875,7 @@ void main(){
             move_snake(&snake_tail[0], 8, 0);
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
               if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
+                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
                 score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -864,7 +906,7 @@ void main(){
         
         if (((snake_tail_ind) == level_data[current_level].next_level_len) && (food_sprite.spriteid != 39)){
           // Deploy key
-          movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1);
+          movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1);
         }
         else if ((snake_tail_ind) > level_data[current_level].next_level_len){
           // Grabbed key 
