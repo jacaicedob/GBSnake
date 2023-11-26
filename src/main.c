@@ -5,7 +5,7 @@
 #include <rand.h>
 
 #include "Sprite.h"
-#include "food.h"
+#include "food_spritesheet_py.h"
 #include "snake_spritesheet_py.h"
 #include "windowmap.h"
 
@@ -42,7 +42,7 @@ The snake sprite has5 8x8 tiles:
     index 3: Head Dead Left
     index 4: Body 
 */
-/* Load snake sprite on the first 9 locations of sprite memory */
+/* Load snake sprite on the first 5 locations of sprite memory */
 uint8_t SNAKE_MEMIND = 0;
 uint8_t SNAKE_NTILES = 5;
 
@@ -60,12 +60,13 @@ uint8_t SNAKE_SPRITE_SIZE = 8;
     index 2: turnip
 */
 /* Load the food sprite right after snake */
-uint8_t FOOD_MEMIND = 5;  //SNAKE_NTILES;
-uint8_t FOOD_NTILES = 3;
+uint8_t FOOD_MEMIND = 5;  
+uint8_t FOOD_NTILES = 4;
 
-uint8_t FOOD_BISCUIT = 5; //FOOD_MEMIND
+uint8_t FOOD_BISCUIT = 5 + 0; //FOOD_MEMIND
 uint8_t FOOD_CARROT = 5 + 1; //FOOD_MEMIND + 1
 uint8_t FOOD_TURNIP = 5 + 2; //FOOD_MEMIND + 2
+uint8_t KEY = 5 + 3; //FOOD_MEMIND + 3
 uint8_t FOOD_SPRITE_SIZE = 8;
 
 /*
@@ -79,20 +80,22 @@ uint8_t LEVEL_FOOD_STARTY = 50;
 void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady);
 
 struct LevelData{
-  unsigned char* level_tiles;
-  unsigned char* level_map;
+  unsigned char* tiles;
+  unsigned char* map;
   unsigned char* background_colliders;
-  short level_ntiles;
-  short level_head_startx;
-  short level_head_starty;
-  short level_food_startx;
-  short level_food_starty;
+  short ntiles;
+  short head_startx;
+  short head_starty;
+  unsigned char head_dir;
+  short food_startx;
+  short food_starty;
   short left_boundary;
   short right_boundary;
   short top_boundary;
   short bottom_boundary;
   unsigned char next_level_len;
   unsigned char speedup;
+  short speed_increase_len;
 };
 
 void wait(uint8_t n){
@@ -344,7 +347,8 @@ void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady){
   }
 }
 
-void movefood(struct Sprite* food, char* bkg_colliders, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles){
+void movefood(struct Sprite* food, char* bkg_colliders, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles, unsigned char key){
+    initrand(DIV_REG);
     /* This function places a new food item at the location of the snake's tail tip */
     uint8_t new_spriteid;
 
@@ -360,18 +364,18 @@ void movefood(struct Sprite* food, char* bkg_colliders, short lbound, short rbou
       randy = ((randy >> 4) + (randy & 0xF)) & 0xF;
 
       // Check for world boundaries
-      if (randx > rbound){
-        randx = randx - rbound + lbound;
+      if (randx <= lbound){
+        randx = randx + (lbound + 1);
       }
-      else if (randx < lbound){
-        randx = randx + lbound;
+      else if (randx >= rbound){
+        randx = randx - rbound + (lbound + 1);
       }
 
-      if (randy > bbound){
-        randy = randy - bbound + tbound;
+      if (randy <= tbound){
+        randy = randy + (tbound + 1);
       }
-      else if (randy < tbound){
-        randy = randy + tbound;
+      else if (randy >= bbound){
+        randy = randy - bbound + (tbound+1);
       }
 
       // Convert to display x,y values
@@ -379,9 +383,14 @@ void movefood(struct Sprite* food, char* bkg_colliders, short lbound, short rbou
       randy = randy*8 + 16;
     } while (background_collision(randx, randy, bkg_colliders, debug_tiles));
 
-    new_spriteid = food->spriteid+1;
-    if (new_spriteid > 39){
-      new_spriteid = 37;
+    if (key){
+      new_spriteid = 39;
+    }
+    else{
+      new_spriteid = food->spriteid+1;
+      if (new_spriteid > 38){
+        new_spriteid = 36;
+      }
     }
     move_sprite(food->spriteid, 0, 0);
     food->spriteid = new_spriteid;
@@ -409,16 +418,18 @@ void main(){
   struct SnakePart* tmphead;
   font_t min_font;
   uint8_t font_tilemap_offset = 37;
-  uint8_t snake_size = SNAKE_MAX_SIZE;
   struct SnakePart snake_tail[SNAKE_MAX_SIZE];
   struct Sprite food_sprite;
   
   uint8_t move_direction;
-  uint8_t jpad;
+  uint8_t old_direction;
+  uint8_t input;
   uint8_t wait_loop_ind;
   uint8_t speed;
+  uint8_t speed_factor;
+  uint8_t old_speed_factor;
 
-  uint8_t food_sprite_id = 37;
+  uint8_t food_sprite_id = 36;
   uint8_t next_snaketail_sprite_id = 0;
   uint8_t snake_tail_ind = 0;
   uint8_t stop_play;
@@ -431,71 +442,84 @@ void main(){
   uint8_t lives;
   
   struct LevelData level_data[4];
-  level_data[0].level_tiles = level1_tiles;
-  level_data[0].level_map = level1_map;
+  level_data[0].tiles = level1_tiles;
+  level_data[0].map = level1_map;
   level_data[0].background_colliders = level1_background_colliders;
-  level_data[0].level_ntiles = level1_ntiles;
-  level_data[0].level_head_startx = 80;
-  level_data[0].level_head_starty = 80;
-  level_data[0].level_food_startx = 72;
-  level_data[0].level_food_starty = 50;
-  level_data[0].left_boundary = 5;
+  level_data[0].ntiles = level1_ntiles;
+  level_data[0].head_startx = 80;
+  level_data[0].head_starty = 80;
+  level_data[0].head_dir = 1; // Up
+  level_data[0].food_startx = 72;
+  level_data[0].food_starty = 50;
+  level_data[0].left_boundary = 4;
   level_data[0].right_boundary = 15;
-  level_data[0].top_boundary = 4;
-  level_data[0].bottom_boundary = 13;
-  level_data[0].next_level_len = 5;
+  level_data[0].top_boundary = 3;
+  level_data[0].bottom_boundary = 14;
+  level_data[0].next_level_len = 37;
   level_data[0].speedup = 5;
+  level_data[0].speed_increase_len = 10;
 
-  level_data[1].level_tiles = level2_tiles;
-  level_data[1].level_map = level2_map;
+  level_data[1].tiles = level2_tiles;
+  level_data[1].map = level2_map;
   level_data[1].background_colliders = level2_background_colliders;
-  level_data[1].level_ntiles = level2_ntiles;
-  level_data[1].level_head_startx = 80;
-  level_data[1].level_head_starty = 80;
-  level_data[1].level_food_startx = 48;
-  level_data[1].level_food_starty = 88;
-  level_data[1].left_boundary = 4;
+  level_data[1].ntiles = level2_ntiles;
+  level_data[1].head_startx = 104;
+  level_data[1].head_starty = 120;
+  level_data[1].head_dir = 1; // Up
+  level_data[1].food_startx = 48;
+  level_data[1].food_starty = 88;
+  level_data[1].left_boundary = 3;
   level_data[1].right_boundary = 13;
-  level_data[1].top_boundary = 6;
-  level_data[1].bottom_boundary = 15;
-  level_data[1].next_level_len = 5;
+  level_data[1].top_boundary = 5;
+  level_data[1].bottom_boundary = 14;
+  level_data[1].next_level_len = 37;
   level_data[1].speedup = 5;
+  level_data[1].speed_increase_len = 8;
 
-  level_data[2].level_tiles = level3_tiles;
-  level_data[2].level_map = level3_map;
+  level_data[2].tiles = level3_tiles;
+  level_data[2].map = level3_map;
   level_data[2].background_colliders = level3_background_colliders;
-  level_data[2].level_ntiles = level3_ntiles;
-  level_data[2].level_head_startx = 80;
-  level_data[2].level_head_starty = 80;
-  level_data[2].level_food_startx = 72;
-  level_data[2].level_food_starty = 96;
-  level_data[2].left_boundary = 9;
+  level_data[2].ntiles = level3_ntiles;
+  level_data[2].head_startx = 72;
+  level_data[2].head_starty = 80;
+  level_data[2].head_dir = 4; // Right
+  level_data[2].food_startx = 72;
+  level_data[2].food_starty = 96;
+  level_data[2].left_boundary = 7;
   level_data[2].right_boundary = 16;
-  level_data[2].top_boundary = 5;
-  level_data[2].bottom_boundary = 13;
-  level_data[2].next_level_len = 5;
+  level_data[2].top_boundary = 3;
+  level_data[2].bottom_boundary = 12;
+  level_data[2].next_level_len = 37;
   level_data[2].speedup = 5;
+  level_data[2].speed_increase_len = 5;
 
-  level_data[3].level_tiles = level4_tiles;
-  level_data[3].level_map = level4_map;
+  level_data[3].tiles = level4_tiles;
+  level_data[3].map = level4_map;
   level_data[3].background_colliders = level4_background_colliders;
-  level_data[3].level_ntiles = level4_ntiles;
-  level_data[3].level_head_startx = 80;
-  level_data[3].level_head_starty = 80;
-  level_data[3].level_food_startx = 128;
-  level_data[3].level_food_starty = 120;
-  level_data[3].left_boundary = 8;
-  level_data[3].right_boundary = 15;
-  level_data[3].top_boundary = 2;
-  level_data[3].bottom_boundary = 15;
-  level_data[3].next_level_len = 5;
+  level_data[3].ntiles = level4_ntiles;
+  level_data[3].head_startx = 112;
+  level_data[3].head_starty = 32;
+  level_data[3].head_dir = 2; // Down
+  level_data[3].food_startx = 128;
+  level_data[3].food_starty = 120;
+  level_data[3].left_boundary = 7;
+  level_data[3].right_boundary = 16;
+  level_data[3].top_boundary = 1;
+  level_data[3].bottom_boundary = 14;
+  level_data[3].next_level_len = 37;
   level_data[3].speedup = 5;
+  level_data[3].speed_increase_len = 3;
 
   unsigned char* level_tiles;
   unsigned char* level_map;
   unsigned char* background_colliders;
   short level_ntiles;
   char current_level;
+
+  char tail1_xoffset;
+  char tail1_yoffset;
+  char tail2_xoffset;
+  char tail2_yoffset;
   
   uint8_t debug_tiles [2] = {0x0, 0x0};
 
@@ -506,10 +530,11 @@ void main(){
 
   /* Load sprite data */
   set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_spritesheet_data);
-  set_sprite_data(FOOD_MEMIND, FOOD_NTILES, food);
+  set_sprite_data(FOOD_MEMIND, FOOD_NTILES, food_spritesheet_data);
   set_sprite_tile(food_sprite_id, FOOD_BISCUIT);
   set_sprite_tile(food_sprite_id+1, FOOD_CARROT);
   set_sprite_tile(food_sprite_id+2, FOOD_TURNIP);
+  set_sprite_tile(food_sprite_id+3, KEY);
 
   /* Load window */
   set_win_tiles(0, 0, 6, 1, scoremap);
@@ -526,12 +551,16 @@ void main(){
 
   DISPLAY_ON;
 
+  uint8_t x;
+
   while (1) {
     /* GAME RESET */
     initrand(DIV_REG);
 
-    jpad = 0x0;
+    input = 0x0;
     speed = 40;
+    speed_factor = 0;
+    old_speed_factor = 0;
     score = 0;
     lives = 3;
 
@@ -543,33 +572,33 @@ void main(){
     current_level = 0;
     score_increment = 1;
     move_direction = J_UP;
-    uint8_t x;
+
+    fadeout();
+
+    HIDE_SPRITES;
+    HIDE_WIN;
+
+    for (x = 0; x < 9; x++){
+      printf("                    ");
+    }
+    printf("     LEVEL %d        ", current_level+1);
+    for (x =0; x < 8; x++){
+      printf("                    ");
+    }
+    SHOW_BKG;
+    fadein();
+    waitpad(J_START);
+    waitpadup();
+
+    HIDE_BKG;
 
     while (!game_over){
       /* Load Level */
-      fadeout();
 
-      HIDE_SPRITES;
-      HIDE_WIN;
-
-      for (x = 0; x < 9; x++){
-        printf("                    ");
-      }
-      printf("     LEVEL %d        ", current_level+1);
-      for (x =0; x < 8; x++){
-        printf("                    ");
-      }
-      SHOW_BKG;
-      fadein();
-      waitpad(J_START);
-      waitpadup();
-
-      HIDE_BKG;
-
-      level_tiles = level_data[current_level].level_tiles;
-      level_map = level_data[current_level].level_map;
+      level_tiles = level_data[current_level].tiles;
+      level_map = level_data[current_level].map;
       background_colliders = level_data[current_level].background_colliders;
-      level_ntiles = level_data[current_level].level_ntiles;
+      level_ntiles = level_data[current_level].ntiles;
 
       /* Load background */
       set_bkg_data(font_tilemap_offset, level_ntiles, level_tiles);
@@ -596,25 +625,72 @@ void main(){
 
       /* Create food sprite */
       // Add code to randomly generate the x,y coordinates of the food. Copy to other places where we spawn new food.
-      food_sprite.x = level_data[current_level].level_food_startx; 
-      food_sprite.y = level_data[current_level].level_food_starty;
+      food_sprite.x = level_data[current_level].food_startx; 
+      food_sprite.y = level_data[current_level].food_starty;
       food_sprite.size = FOOD_SPRITE_SIZE;
       food_sprite.spriteid = food_sprite_id;
       move_sprite(food_sprite.spriteid, food_sprite.x, food_sprite.y);
       
       /* Create Snake head at index 0 of snake_tail array*/
-      snake_tail[snake_tail_ind].sprite.x = level_data[current_level].level_head_startx;
-      snake_tail[snake_tail_ind].sprite.y = level_data[current_level].level_head_starty;
+      snake_tail[snake_tail_ind].sprite.x = level_data[current_level].head_startx;
+      snake_tail[snake_tail_ind].sprite.y = level_data[current_level].head_starty;
       snake_tail[snake_tail_ind].sprite.size = SNAKE_SPRITE_SIZE;
       snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
-      set_sprite_tile(next_snaketail_sprite_id,SNAKE_HEAD_UP);
+      switch (level_data[current_level].head_dir) {
+        case 1:
+          // UP
+          set_sprite_tile(next_snaketail_sprite_id, SNAKE_HEAD_UP);
+          set_sprite_prop(next_snaketail_sprite_id, get_sprite_prop(0) & ~S_FLIPY);
+          tail1_yoffset = SNAKE_SPRITE_SIZE;
+          tail1_xoffset = 0;
+          tail2_yoffset = 2 * SNAKE_SPRITE_SIZE;
+          tail2_xoffset = 0;
+          move_direction = J_UP;
+          break;
+
+        case 2:
+          // DOWN
+          set_sprite_tile(next_snaketail_sprite_id, SNAKE_HEAD_UP);
+          set_sprite_prop(next_snaketail_sprite_id, S_FLIPY);
+          tail1_yoffset = -SNAKE_SPRITE_SIZE;
+          tail1_xoffset = 0;
+          tail2_yoffset = -2 * SNAKE_SPRITE_SIZE;
+          tail2_xoffset = 0;
+          move_direction = J_DOWN;
+          break;
+
+        case 3:
+          // LEFT
+          set_sprite_tile(next_snaketail_sprite_id, SNAKE_HEAD_L);
+          set_sprite_prop(next_snaketail_sprite_id, get_sprite_prop(0) & ~S_FLIPX);
+          tail1_yoffset = 0;
+          tail1_xoffset = SNAKE_SPRITE_SIZE;
+          tail2_yoffset = 0;
+          tail2_xoffset = 2 * SNAKE_SPRITE_SIZE;
+          move_direction = J_LEFT;
+          break;
+
+        case 4:
+          // RIGHT
+          set_sprite_tile(next_snaketail_sprite_id, SNAKE_HEAD_L);
+          set_sprite_prop(next_snaketail_sprite_id, S_FLIPX);
+          tail1_yoffset = 0;
+          tail1_xoffset = -SNAKE_SPRITE_SIZE;
+          tail2_yoffset = 0;
+          tail2_xoffset = -2 * SNAKE_SPRITE_SIZE;
+          move_direction = J_RIGHT;
+          break;
+
+        default:
+          break;
+      }
       move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
       next_snaketail_sprite_id++;
       snake_tail_ind++;
 
       /* Create snake tail */
-      snake_tail[snake_tail_ind].sprite.x = level_data[current_level].level_head_startx;
-      snake_tail[snake_tail_ind].sprite.y = level_data[current_level].level_head_starty + SNAKE_SPRITE_SIZE;
+      snake_tail[snake_tail_ind].sprite.x = level_data[current_level].head_startx + tail1_xoffset;
+      snake_tail[snake_tail_ind].sprite.y = level_data[current_level].head_starty + tail1_yoffset;
       snake_tail[snake_tail_ind].sprite.size = SNAKE_SPRITE_SIZE;
       snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
       set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
@@ -623,8 +699,8 @@ void main(){
       next_snaketail_sprite_id++;
       snake_tail_ind++;   
       
-      snake_tail[snake_tail_ind].sprite.x = level_data[current_level].level_head_startx;
-      snake_tail[snake_tail_ind].sprite.y = level_data[current_level].level_head_starty + 2*SNAKE_SPRITE_SIZE;
+      snake_tail[snake_tail_ind].sprite.x = level_data[current_level].head_startx + tail2_xoffset;
+      snake_tail[snake_tail_ind].sprite.y = level_data[current_level].head_starty + tail2_yoffset;
       snake_tail[snake_tail_ind].sprite.size = SNAKE_SPRITE_SIZE;
       snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
       set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
@@ -634,8 +710,9 @@ void main(){
       next_snaketail_sprite_id++;
       snake_tail_ind++;
 
-      move_direction = J_UP;
       speed = 40;
+      speed_factor = 0;
+      old_speed_factor = 0;
 
       while(!stop_play){
         if ((move_direction & J_UP) == J_UP){
@@ -649,9 +726,9 @@ void main(){
           else {
             move_snake(&snake_tail[0], 0, -8);
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-              movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles);
-              score = score + score_increment;
-              if (snake_tail_ind < snake_size) {
+              if (snake_tail_ind < level_data[current_level].next_level_len) {
+                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
+                score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
                 snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
@@ -663,6 +740,9 @@ void main(){
                 next_snaketail_sprite_id++;
                 snake_tail_ind++;
               }                    
+              else {
+                snake_tail_ind++;
+              }
             } 
             // else if (head_tail_collision(&snake_tail)){
             else if (head_tail_collision(snake_tail)){
@@ -681,9 +761,9 @@ void main(){
           else {
             move_snake(&snake_tail[0], 0, 8);
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-              movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles); 
-              score = score + score_increment;
-              if (snake_tail_ind < snake_size) {
+              if (snake_tail_ind < level_data[current_level].next_level_len) {
+                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0); 
+                score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
                 snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
@@ -693,6 +773,9 @@ void main(){
                 snake_tail[snake_tail_ind-1].next = &snake_tail[snake_tail_ind];
                 snake_tail[snake_tail_ind].next = NULL;
                 next_snaketail_sprite_id++;
+                snake_tail_ind++;
+              }
+              else {
                 snake_tail_ind++;
               }
             }
@@ -714,9 +797,9 @@ void main(){
             move_snake(&snake_tail[0], -8, 0);
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
               // Ate food. Increment tail.
-              movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles);
-              score++;
-              if (snake_tail_ind < snake_size) {
+              if (snake_tail_ind < level_data[current_level].next_level_len) {
+                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
+                score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
                 snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
@@ -726,6 +809,9 @@ void main(){
                 snake_tail[snake_tail_ind-1].next = &snake_tail[snake_tail_ind];
                 snake_tail[snake_tail_ind].next = NULL;
                 next_snaketail_sprite_id++;
+                snake_tail_ind++;
+              }
+              else {
                 snake_tail_ind++;
               }
             }
@@ -746,9 +832,9 @@ void main(){
           else {
             move_snake(&snake_tail[0], 8, 0);
             if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-              movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles);
-              score = score + score_increment;
-              if (snake_tail_ind < snake_size) {
+              if (snake_tail_ind < level_data[current_level].next_level_len) {
+                movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
+                score = score + score_increment;
                 snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
                 snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
                 snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
@@ -760,6 +846,9 @@ void main(){
                 next_snaketail_sprite_id++;
                 snake_tail_ind++;
               }
+              else {
+                snake_tail_ind++;
+              }
             }
             // else if (head_tail_collision(&snake_tail)){
             else if (head_tail_collision(snake_tail)){
@@ -769,70 +858,99 @@ void main(){
           }
         }
         score_increment = 1;
-        // score2tile(score, &score_tiles);
-        score2tile(score, score_tiles);
+        //score2tile(score, score_tiles);
+        score2tile(speed, score_tiles);  // DEBUG ONLY, REMOVE!
         set_win_tiles(6,0, 3, 1, score_tiles);
         
-        if ((snake_tail_ind) >= level_data[current_level].next_level_len){
+        if (((snake_tail_ind) == level_data[current_level].next_level_len) && (food_sprite.spriteid != 39)){
+          // Deploy key
+          movefood(&food_sprite, background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1);
+        }
+        else if ((snake_tail_ind) > level_data[current_level].next_level_len){
+          // Grabbed key 
           if (current_level == 3){
-            win_screen(score);
-            stop_play = 1;
+            // WIN THE GAME
+            stop_play = 3;
           }
           else {
+            // WIN THE LEVEL
             current_level++;
             stop_play = 2;
           }
         }
-        // else {
-          // speed = speed - level_data[current_level].speedup * ((int) (snake_tail_ind) / level_data[current_level].speedup);
-        // }
+        else {
+          // Increase speed when the snake length reaches a multiple of LevelData.speedup
+          speed_factor = ((int) (snake_tail_ind) / level_data[current_level].speed_increase_len);
+          if (speed_factor != old_speed_factor) {
+            speed = speed - level_data[current_level].speedup;
+            old_speed_factor = speed_factor;
+          }
+        }
         
+        old_direction = move_direction;
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
-          jpad = joypad();
+          input = joypad();
           
-          if (((jpad & 0x3) > 0) && ((move_direction & 0x3) == 0)){
+          /*
+            J_RIGHT = 0x1
+            J_LEFT  = 0x2
+            J_UP    = 0x4
+            J_DOWN  = 0x8
+          */
+          if (((input & 0x3) > 0) && ((old_direction & 0x3) == 0)){
             // case where J_RIGHT or J_LEFT were pressed and
             // snake is not already moving RIGHT or LEFT.
             // This is valid user input.
-            move_direction = jpad;
+            move_direction = input;
           }
-          else if (((jpad & 0xC) > 0) && ((move_direction & 0xC) == 0)){
+          else if (((input & 0xC) > 0) && ((old_direction & 0xC) == 0)){
             // case where J_UP or J_DOWN were pressed and
             // snake is not already moving UP or DOWN.
             // This is valid user input.
-            move_direction = jpad;
+            move_direction = input;
           }  
-          else if ((jpad & J_START) > 0){
+          else if ((input & J_START) > 0){
             // use logic to pause game
-            move_direction = jpad;
+            move_direction = input;
           }           
           wait_vbl_done();
         }
+      // End level loop (while (!stop_play){})
       }
 
       if (stop_play == 1) {
         flash_sprites();
         lives -= 1;
+        stop_play = 0;
       }
-      stop_play = 0;
+      else if (stop_play == 2){
+        stop_play = 0;
+        fadeout();
+
+        HIDE_SPRITES;
+        HIDE_WIN;
+
+        for (x = 0; x < 9; x++){
+          printf("                    ");
+        }
+        printf("     LEVEL %d        ", current_level+1);
+        for (x =0; x < 8; x++){
+          printf("                    ");
+        }
+        SHOW_BKG;
+        fadein();
+        waitpad(J_START);
+        waitpadup();
+
+        HIDE_BKG;
+      }
 
       if (lives == 0){
         game_over = 1;
-        if (current_level > 3){
-          current_level = 0;
-        }
-        // game_over_screen(score);
-        // lives = 3;
-        // score = 0;
-        // lives_tiles[0] = font_tilemap_offset+level_ntiles;
-        // lives_tiles[1] = font_tilemap_offset+level_ntiles;
-        // lives_tiles[2] = font_tilemap_offset+level_ntiles;
-
-        // debug_tiles[0] = 0x0;
-        // debug_tiles[1] = 0x0;
       }
-      else if (current_level > 3){
-        win_screen(score);
+      else if (stop_play == 3){
+        // Should not be necessary but forcing the loop exit when the game is won
+        game_over = 0;
         break;
       }
       else {
@@ -849,13 +967,14 @@ void main(){
           tmphead = tmphead->next;
         }
       }
+    // End Game loop (while (!game_over){})
     }
 
     if (game_over) {
       game_over_screen(score);
     }
-    else if (current_level > 3){
-      break;
+    else if (stop_play == 3){
+      win_screen(score);
     }
     HIDE_BKG;
     HIDE_WIN;
@@ -867,5 +986,6 @@ void main(){
       move_sprite(tmphead->sprite.spriteid, 0, 0);
       tmphead = tmphead->next;
     }
+  // End system loop (while (1){})
   }
 }

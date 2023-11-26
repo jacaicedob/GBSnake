@@ -2,7 +2,6 @@
 Number of tiles: 13
 */
 
-short level4_ntiles = 13;
 const unsigned char level4_tiles[] = 
 {
   0XD0,0XB6,0X60,0XFB,0XD0,0XB5,0XA0,0XFD,0X60,0XFE,0XD0,0XBF,0X60,0XF7,0XD0,0XBB,
