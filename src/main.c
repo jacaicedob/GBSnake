@@ -438,7 +438,6 @@ void score2tile(uint8_t score, uint8_t* score_tiles){
     }
 }
 
-
 void main(){
   struct SnakePart* tmphead;
   font_t min_font;
@@ -917,6 +916,16 @@ void main(){
       move_sprite(tmphead->sprite.spriteid, 0, 0);
       tmphead = tmphead->next;
     }
+
+    /* 
+    End the program: 
+    REMOVE TO ALLOW FOR THE GAME TO RESTART
+    ONCE THE MAP CORRUPTION IS DEBUGGED.
+    */
+    show_finalscreen(restart_titlescreen);
+    SHOW_BKG;
+    break;
+
   // End system loop (while (1){})
   }
 }

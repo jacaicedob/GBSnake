@@ -3,7 +3,7 @@ Tile map size: 20x18
 */
 
 short level3_ntiles = 24;
-const unsigned char level3_map[] = 
+unsigned char level3_map[] = 
 {
   0X25,0X26,0X27,0X28,0X29,0X2A,0X29,0X2A,0X29,0X2A,0X29,0X2A,0X29,0X2A,0X29,0X2A,0X29,0X2A,0X29,0X2A,
   0X2B,0X2C,0X2D,0X28,0X2E,0X2F,0X2E,0X2F,0X2E,0X2F,0X2E,0X2F,0X2E,0X2F,0X2E,0X2F,0X2E,0X2F,0X2E,0X2F,
