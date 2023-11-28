@@ -304,7 +304,7 @@ UBYTE background_collision(uint8_t x, uint8_t y, char* bkg_colliders, uint8_t* d
 
   tileind = y_tile*stride + x_tile;
   debug_tiles[1] = bkg_colliders[tileind] + 0x1;
-  set_win_tiles(14, 0, 2, 1, debug_tiles);
+  set_win_tiles(14, 0, 3, 1, debug_tiles);
 
   if (bkg_colliders[tileind] == 1) {
     collision = 1;
@@ -469,6 +469,11 @@ void main(){
   
   uint8_t move_direction;
   uint8_t old_direction;
+  uint8_t move_dir_buff[16]; // Rolling input buffer
+  char move_dir_buff_ind;
+  char new_input;
+  char start_ind;
+
   uint8_t input;
   uint8_t wait_loop_ind;
   uint8_t speed;
@@ -578,7 +583,7 @@ void main(){
   int8_t dx_coll;
   int8_t dy_coll;
 
-  uint8_t debug_tiles [2] = {0x0, 0x0};
+  uint8_t debug_tiles [3] = {0x0, 0x0, 0x0};
 
   /* Initialize font */
   font_init();
@@ -596,7 +601,7 @@ void main(){
   /* Load window */
   set_win_tiles(0, 0, 6, 1, lives_label);
   set_win_tiles(10, 0, 3, 1, score_tiles);
-  set_win_tiles(14, 0, 2, 1, debug_tiles);
+  set_win_tiles(14, 0, 3, 1, debug_tiles);
   move_win(7,136);
 
   DISPLAY_ON;
@@ -619,7 +624,7 @@ void main(){
     stop_play = 0;
     game_over = 0;
     current_level = 0;
-    move_direction = J_UP;
+    
 
     dx, dy = 0;
     dx_coll, dy_coll = 0;
@@ -663,6 +668,9 @@ void main(){
 
       next_snaketail_sprite_id = 0;
       snake_tail_ind = 0;
+      move_dir_buff_ind = 0;
+      new_input = 0;
+      start_ind = move_dir_buff_ind;
 
       /* Create food sprite */
       // Add code to randomly generate the x,y coordinates of the food. Copy to other places where we spawn new food.
@@ -689,7 +697,7 @@ void main(){
           tail1_xoffset = 0;
           tail2_yoffset = 2 * SNAKE_SPRITE_SIZE;
           tail2_xoffset = 0;
-          move_direction = J_UP;
+          move_dir_buff[move_dir_buff_ind] = J_UP;
           break;
 
         case 2:
@@ -700,7 +708,7 @@ void main(){
           tail1_xoffset = 0;
           tail2_yoffset = -2 * SNAKE_SPRITE_SIZE;
           tail2_xoffset = 0;
-          move_direction = J_DOWN;
+          move_dir_buff[move_dir_buff_ind] = J_DOWN;
           break;
 
         case 3:
@@ -711,7 +719,7 @@ void main(){
           tail1_xoffset = SNAKE_SPRITE_SIZE;
           tail2_yoffset = 0;
           tail2_xoffset = 2 * SNAKE_SPRITE_SIZE;
-          move_direction = J_LEFT;
+          move_dir_buff[move_dir_buff_ind] = J_LEFT;
           break;
 
         case 4:
@@ -722,7 +730,7 @@ void main(){
           tail1_xoffset = -SNAKE_SPRITE_SIZE;
           tail2_yoffset = 0;
           tail2_xoffset = -2 * SNAKE_SPRITE_SIZE;
-          move_direction = J_RIGHT;
+          move_dir_buff[move_dir_buff_ind] = J_RIGHT;
           break;
 
         default:
@@ -759,6 +767,8 @@ void main(){
       old_speed_factor = 0;
 
       while(!stop_play){
+        move_direction = move_dir_buff[move_dir_buff_ind];
+
         if ((move_direction & J_UP) == J_UP){
           debug_tiles[0] = 0x1 + 0x1; 
           dx = 0;
@@ -794,7 +804,8 @@ void main(){
           dy_coll = 0;
         }
         
-        set_win_tiles(14, 0, 2, 1, debug_tiles);
+        debug_tiles[2] = move_dir_buff_ind + 1;
+        set_win_tiles(14, 0, 3, 1, debug_tiles);
         // Check collision with background obstacles    
         if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, background_colliders, debug_tiles)){
           stop_play = 1;
@@ -860,6 +871,8 @@ void main(){
         }
 
         old_direction = move_direction;
+        start_ind = move_dir_buff_ind;
+        new_input = 0;
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
           input = joypad();
           
@@ -873,13 +886,21 @@ void main(){
             // case where J_RIGHT or J_LEFT were pressed and
             // snake is not already moving RIGHT or LEFT.
             // This is valid user input.
-            move_direction = input;
+            start_ind++;
+            start_ind = start_ind & 0xF;
+            move_dir_buff[start_ind] = input;
+            old_direction = input;
+            new_input = 1;
           }
           else if (((input & 0xC) > 0) && ((old_direction & 0xC) == 0)){
             // case where J_UP or J_DOWN were pressed and
             // snake is not already moving UP or DOWN.
             // This is valid user input.
-            move_direction = input;
+            start_ind++;
+            start_ind = start_ind & 0xF;
+            move_dir_buff[start_ind] = input;
+            old_direction = input;
+            new_input = 1;
           }  
           else if ((input & J_START) > 0){
             // PAUSE GAME. Resume with the old direction.
@@ -888,8 +909,6 @@ void main(){
             waitpadup();
             move_direction = old_direction;
             break;
-            // // use logic to pause game
-            // move_direction = input;
           }           
 
           // When timer expires, start food blinking animation
@@ -916,6 +935,11 @@ void main(){
           // Wait until the Vertical Blanking is done
           wait_vbl_done();
         }
+        if (new_input == 1){
+          move_dir_buff_ind++;
+          move_dir_buff_ind = move_dir_buff_ind & 0xF;
+          new_input = 0;
+        }
       // End level loop (while (!stop_play){})
       }
 
@@ -940,7 +964,7 @@ void main(){
       }
       else {
         speed = 40;
-        move_direction = J_UP;
+        move_dir_buff[move_dir_buff_ind] = J_UP;
         lives_tiles[lives] = 0x0;
         set_win_tiles(6, 0, 3, 1, lives_tiles);
     
