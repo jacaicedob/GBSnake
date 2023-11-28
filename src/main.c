@@ -203,43 +203,40 @@ void win_screen(uint8_t score){
 }
 
 UBYTE sprite_collision_coord(struct Sprite* sp1, uint8_t x, uint8_t y){
-  /* This code peforms collision between the centers of sp1 with sp2 */
-  uint8_t sp1_xcenter = sp1->x + sp1->size/2;
-  uint8_t sp1_ycenter = sp1->y + sp1->size/2;
-  uint8_t sp1_xtile = (sp1_xcenter - 8) / 8;
-  uint8_t sp1_ytile = (sp1_ycenter - 16) / 8;
+  /* 
+    Check for collision between sp1 and sp2. Using sp1 as reference,
+    define a 2-pixel boundary around its center and check if the 
+    passed coordinates are inside that boundary.
+  */
+  uint8_t sp1_left_bound = sp1->x + (sp1->size >> 1) - 2;
+  uint8_t sp1_right_bound = sp1->x + (sp1->size >> 1) + 2;
+  uint8_t sp1_top_bound = sp1->y + (sp1->size >> 1) - 2;
+  uint8_t sp1_bottom_bound = sp1->y + (sp1->size >> 1) + 2;
 
-  uint8_t sp2_xcenter = x + sp1->size/2;
-  uint8_t sp2_ycenter = y + sp1->size/2;
-  uint8_t sp2_xtile = (sp2_xcenter - 8) / 8;
-  uint8_t sp2_ytile = (sp2_ycenter - 16) / 8;
-
-  return ((sp1_xtile == sp2_xtile) & (sp1_ytile == sp2_ytile));
+  return (x >= sp1_left_bound) && \
+         (x <= sp1_right_bound) && \
+         (y >= sp1_top_bound) && \
+         (y <= sp1_bottom_bound);
 }
+
 UBYTE sprite_collision(struct Sprite* sp1, struct Sprite* sp2){
-  /* This code peforms collision between the centers of sp1 with sp2 */
-  uint8_t sp1_xcenter = sp1->x + sp1->size/2;
-  uint8_t sp1_ycenter = sp1->y + sp1->size/2;
-  uint8_t sp1_xtile = (sp1_xcenter - 8) / 8;
-  uint8_t sp1_ytile = (sp1_ycenter - 16) / 8;
+  /* 
+    Check for collision between sp1 and sp2. Using sp1 as reference,
+    define a 2-pixel boundary around its center and check if the center
+    of sp2 is inside that boundary.
+  */
 
-  uint8_t sp2_xcenter = sp2->x + sp2->size/2;
-  uint8_t sp2_ycenter = sp2->y + sp2->size/2;
-  uint8_t sp2_xtile = (sp2_xcenter - 8) / 8;
-  uint8_t sp2_ytile = (sp2_ycenter - 16) / 8;
+  uint8_t sp1_left_bound = sp1->x + (sp1->size >> 1) - 2;
+  uint8_t sp1_right_bound = sp1->x + (sp1->size >> 1) + 2;
+  uint8_t sp1_top_bound = sp1->y + (sp1->size >> 1) - 2;
+  uint8_t sp1_bottom_bound = sp1->y + (sp1->size >> 1) + 2;
+  uint8_t sp2_xcenter = sp2->x + (sp2->size >> 1);
+  uint8_t sp2_ycenter = sp2->y + (sp2->size >> 1);
 
-  return ((sp1_xtile == sp2_xtile) & (sp1_ytile == sp2_ytile));
-
-  // uint8_t sp1_left = sp1->x + sp1->size/2;
-  // uint8_t sp1_right = sp1->x + sp1->size - sp1->size/2;
-  // uint8_t sp1_top = sp1->y + sp1->size/2;
-  // uint8_t sp1_bottom = sp1->y + sp1->size;
-  // uint8_t sp2_left = sp2->x;
-  // uint8_t sp2_right = sp2->x + sp2->size;
-  // uint8_t sp2_top = sp2->y;
-  // uint8_t sp2_bottom = sp2->y + sp2->size;
-
-  // return (((sp1_left >= sp2_left) && (sp1_left <= sp2_right)) && ((sp1_top >= sp2_top) && (sp1_top <= sp2_bottom))) || (((sp2_left >= sp1_left) && (sp2_left <= sp1_right)) && ((sp2_top >= sp1_top) && (sp2_top <= sp1_bottom)));
+  return (sp2_xcenter >= sp1_left_bound) && \
+         (sp2_xcenter <= sp1_right_bound) && \
+         (sp2_ycenter >= sp1_top_bound) && \
+         (sp2_ycenter <= sp1_bottom_bound);
 }
 
 uint8_t head_tail_collision(struct SnakePart* head){
@@ -287,7 +284,7 @@ UBYTE background_collision(uint8_t x, uint8_t y, char* bkg_colliders, uint8_t* d
 
   tileind = y_tile*stride + x_tile;
   debug_tiles[1] = bkg_colliders[tileind] + 0x1;
-  set_win_tiles(10, 0, 2, 1, debug_tiles);
+  set_win_tiles(14, 0, 2, 1, debug_tiles);
 
   if (bkg_colliders[tileind] == 1) {
     collision = 1;
@@ -315,21 +312,6 @@ void move_snake(struct SnakePart* head, int8_t x, int8_t y){
   heady = head->sprite.y;
   newx = head->sprite.x + x;
   newy = head->sprite.y + y;
-
-  // // Check collision with the screen borders
-  // if (newx >= (SCREEN_LEFT + SCREEN_WIDTH)){
-    // newx = SCREEN_LEFT + SCREEN_WIDTH;
-  // }
-  // else if (newx <= SCREEN_LEFT){
-    // newx = SCREEN_LEFT + head->sprite.size;
-  // }
-
-  // if (newy >= (SCREEN_TOP + SCREEN_HEIGHT)){
-    // newy = SCREEN_TOP + SCREEN_HEIGHT;
-  // }
-  // else if (newy <= SCREEN_TOP){
-    // newy = SCREEN_TOP + head->sprite.size;
-  // }
 
   // Load appropriate head sprites based on movement
   if (newx <  head->sprite.x){
@@ -563,6 +545,11 @@ void main(){
   char tail2_xoffset;
   char tail2_yoffset;
   
+  int8_t dx;
+  int8_t dy;
+  int8_t dx_coll;
+  int8_t dy_coll;
+
   uint8_t debug_tiles [2] = {0x0, 0x0};
 
   /* Initialize font */
@@ -579,9 +566,9 @@ void main(){
   set_sprite_tile(food_sprite_id+3, KEY);
 
   /* Load window */
-  set_win_tiles(0, 0, 6, 1, scoremap);
-  set_win_tiles(6, 0, 3, 1, score_tiles);
-  set_win_tiles(10, 0, 2, 1, debug_tiles);
+  set_win_tiles(0, 0, 6, 1, lives_label);
+  set_win_tiles(10, 0, 3, 1, score_tiles);
+  set_win_tiles(14, 0, 2, 1, debug_tiles);
   move_win(7,136);
 
   // SHOW_BKG;
@@ -614,6 +601,11 @@ void main(){
     current_level = 0;
     score_increment = 1;
     move_direction = J_UP;
+
+    dx, dy = 0;
+    dx_coll, dy_coll = 0;
+    tail1_xoffset = tail1_yoffset = 0;
+    tail2_xoffset = tail2_yoffset = 0;
 
     fadeout();
 
@@ -650,7 +642,7 @@ void main(){
         lives_tiles[i] = font_tilemap_offset+level_ntiles;
       }
 
-      set_win_tiles(16, 0, 3, 1, lives_tiles);
+      set_win_tiles(6, 0, 3, 1, lives_tiles);
 
       /* Main code */
       set_bkg_tiles(0, 0, 20, 18, level_map);
@@ -759,150 +751,76 @@ void main(){
       while(!stop_play){
         if ((move_direction & J_UP) == J_UP){
           debug_tiles[0] = 0x1 + 0x1; 
-          set_win_tiles(10, 0, 2, 1, debug_tiles);
-          // Check collision with background obstacles    
-          if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y-4, background_colliders, debug_tiles)){
-            stop_play = 1;
-            move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
-          }
-          else {
-            move_snake(&snake_tail[0], 0, -8);
-            if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-              if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
-                score = score + score_increment;
-                snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
-                snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
-                snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
-                set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
-                move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
-                snake_tail[snake_tail_ind-1].next = &snake_tail[snake_tail_ind];
-                snake_tail[snake_tail_ind].next = NULL;
-                next_snaketail_sprite_id++;
-                snake_tail_ind++;
-              }                    
-              else {
-                snake_tail_ind++;
-              }
-            } 
-            // else if (head_tail_collision(&snake_tail)){
-            else if (head_tail_collision(snake_tail)){
-              // Collided head with tail. End Game
-              stop_play = 1;
-            }  
-          }
+          dx = 0;
+          dy = -8;
+          dx_coll = 0;
+          dy_coll = dy + 4;
         }                     
         else if ((move_direction & J_DOWN) == J_DOWN){
           debug_tiles[0] = 0x2 + 0x1; 
-          set_win_tiles(10, 0, 2, 1, debug_tiles);
-          if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y+12, background_colliders, debug_tiles)){
-            stop_play = 1;
-            move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
-          }
-          else {
-            move_snake(&snake_tail[0], 0, 8);
-            if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-              if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0); 
-                score = score + score_increment;
-                snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
-                snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
-                snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
-                set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
-                move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
-                snake_tail[snake_tail_ind-1].next = &snake_tail[snake_tail_ind];
-                snake_tail[snake_tail_ind].next = NULL;
-                next_snaketail_sprite_id++;
-                snake_tail_ind++;
-              }
-              else {
-                snake_tail_ind++;
-              }
-            }
-            // else if (head_tail_collision(&snake_tail)){
-            else if (head_tail_collision(snake_tail)){
-              // Collided head with tail. End Game
-              stop_play = 1;
-            }
-          }
+          dx = 0;
+          dy = 8;
+          dx_coll = 0;
+          dy_coll = dy + 4;
         }
         else if (((move_direction & J_LEFT) == J_LEFT)){
           debug_tiles[0] = 0x3 + 0x1; 
-          set_win_tiles(10, 0, 2, 1, debug_tiles);
-          if (background_collision(snake_tail[0].sprite.x-4, snake_tail[0].sprite.y, background_colliders, debug_tiles)){
-            stop_play = 1;
-            move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
-          }
-          else {
-            move_snake(&snake_tail[0], -8, 0);
-            if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-              // Ate food. Increment tail.
-              if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
-                score = score + score_increment;
-                snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
-                snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
-                snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
-                set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
-                move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
-                snake_tail[snake_tail_ind-1].next = &snake_tail[snake_tail_ind];
-                snake_tail[snake_tail_ind].next = NULL;
-                next_snaketail_sprite_id++;
-                snake_tail_ind++;
-              }
-              else {
-                snake_tail_ind++;
-              }
-            }
-            // else if (head_tail_collision(&snake_tail)){
-            else if (head_tail_collision(snake_tail)){
-              // Collided head with tail. End Game
-              stop_play = 1;
-            }
-          }                  
+          dx = -8;
+          dy = 0;
+          dx_coll = dx + 4;
+          dy_coll = 0;
         }
         else if (((move_direction & J_RIGHT) == J_RIGHT)){
           debug_tiles[0] = 0x4 + 0x1; 
-          set_win_tiles(10, 0, 2, 1, debug_tiles);
-          if (background_collision(snake_tail[0].sprite.x+12, snake_tail[0].sprite.y, background_colliders, debug_tiles)){
-            stop_play = 1;
-            move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
-          }
-          else {
-            move_snake(&snake_tail[0], 8, 0);
-            if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
-              if (snake_tail_ind < level_data[current_level].next_level_len) {
-                movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
-                score = score + score_increment;
-                snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
-                snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
-                snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
-                snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
-                set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
-                move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
-                snake_tail[snake_tail_ind-1].next = &snake_tail[snake_tail_ind];
-                snake_tail[snake_tail_ind].next = NULL;
-                next_snaketail_sprite_id++;
-                snake_tail_ind++;
-              }
-              else {
-                snake_tail_ind++;
-              }
-            }
-            // else if (head_tail_collision(&snake_tail)){
-            else if (head_tail_collision(snake_tail)){
-              // Collided head with tail. End Game
-              stop_play = 1;
-            }
-          }
+          dx = 8;
+          dy = 0;
+          dx_coll = dx + 4;
+          dy_coll = 0;
         }
+        else {
+          dx = 0;
+          dy = 0;
+          dx_coll = 0;
+          dy_coll = 0;
+        }
+        
+        set_win_tiles(14, 0, 2, 1, debug_tiles);
+        // Check collision with background obstacles    
+        if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, background_colliders, debug_tiles)){
+          stop_play = 1;
+          move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
+        }
+        else {
+          move_snake(&snake_tail[0], dx, dy);
+          if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
+            if (snake_tail_ind < level_data[current_level].next_level_len) {
+              movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
+              score = score + score_increment;
+              snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
+              snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
+              snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
+              snake_tail[snake_tail_ind].sprite.spriteid = next_snaketail_sprite_id;
+              set_sprite_tile(next_snaketail_sprite_id, SNAKE_BODY);
+              move_sprite(snake_tail[snake_tail_ind].sprite.spriteid, snake_tail[snake_tail_ind].sprite.x, snake_tail[snake_tail_ind].sprite.y);
+              snake_tail[snake_tail_ind-1].next = &snake_tail[snake_tail_ind];
+              snake_tail[snake_tail_ind].next = NULL;
+              next_snaketail_sprite_id++;
+              snake_tail_ind++;
+            }                    
+            else {
+              snake_tail_ind++;
+            }
+          } 
+          else if (head_tail_collision(snake_tail)){
+            // Collided head with tail. End Game
+            stop_play = 1;
+          }  
+        }
+
         score_increment = 1;
         //score2tile(score, score_tiles);
         score2tile(speed, score_tiles);  // DEBUG ONLY, REMOVE!
-        set_win_tiles(6,0, 3, 1, score_tiles);
+        set_win_tiles(10,0, 3, 1, score_tiles);
         
         if (((snake_tail_ind) == level_data[current_level].next_level_len) && (food_sprite.spriteid != 39)){
           // Deploy key
@@ -1005,7 +923,7 @@ void main(){
         speed = 40;
         move_direction = J_UP;
         lives_tiles[lives] = 0x0;
-        set_win_tiles(16, 0, 3, 1, lives_tiles);
+        set_win_tiles(6, 0, 3, 1, lives_tiles);
     
         /* Reset all variables */
         move_sprite(food_sprite.spriteid, 0, 0);
