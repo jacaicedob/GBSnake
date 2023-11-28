@@ -9,6 +9,7 @@
 #include "snake_spritesheet_py.h"
 #include "windowmap.h"
 
+#include "level_title_screens.h"
 #include "level1_tiles_py.h"
 #include "level1_map_py.h"
 #include "level1_colliders.h"
@@ -96,6 +97,7 @@ struct LevelData{
   unsigned char next_level_len;
   unsigned char speedup;
   short speed_increase_len;
+  unsigned char* titlescreen;
 };
 
 void wait(uint8_t n){
@@ -166,40 +168,39 @@ void flash_sprites(){
     }
 }
 
-void game_over_screen(uint8_t score){
-  uint8_t x;
-
+void show_finalscreen(unsigned char* finalscreen){
   HIDE_SPRITES;
   HIDE_WIN;
   
-  for (x = 0; x < 8; x++){
-    printf("                    ");
-  }
-  printf("     GAME OVER      ");
-  printf("      SCORE %d      ", score);
-  for (x =0; x < 8; x++){
-    printf("                    ");
-  }
+  set_bkg_tiles(0, 0, 20, 18, finalscreen);
+
+  SHOW_BKG;
+  fadein();
   waitpad(J_START);
   waitpadup();
+  HIDE_BKG;
 }
 
-void win_screen(uint8_t score){
-  uint8_t x;
-
+void show_titlescreen(unsigned char* titlescreen){
   HIDE_SPRITES;
   HIDE_WIN;
+  
+  set_bkg_tiles(0, 0, 20, 18, titlescreen);
 
-  for (x = 0; x < 8; x++){
-    printf("                    ");
+  SHOW_BKG;
+  
+  // Scroll background so it looks it comes down from the top of the screen
+  move_bkg(0, 72);
+  fadein();
+
+  for (int i = 72; i >= 0; i--){
+    move_bkg(0, i);
+    wait_vbl_done();
   }
-  printf("     YOU WIN!       ");
-  printf("     SCORE %d       ", score);
-  for (x =0; x < 8; x++){
-    printf("                    ");
-  }
+
   waitpad(J_START);
   waitpadup();
+  HIDE_BKG;
 }
 
 UBYTE sprite_collision_coord(struct Sprite* sp1, uint8_t x, uint8_t y){
@@ -458,8 +459,6 @@ void main(){
   uint8_t snake_tail_ind = 0;
   uint8_t stop_play;
   uint8_t game_over;
-  uint8_t score;
-  uint8_t score_increment = 1;
 
   uint8_t score_tiles[3];
   uint8_t lives_tiles[3];
@@ -482,6 +481,7 @@ void main(){
   level_data[0].next_level_len = 37;
   level_data[0].speedup = 5;
   level_data[0].speed_increase_len = 10;
+  level_data[0].titlescreen = level1_titlescreen;
 
   level_data[1].tiles = level2_tiles;
   level_data[1].map = level2_map;
@@ -499,6 +499,7 @@ void main(){
   level_data[1].next_level_len = 37;
   level_data[1].speedup = 5;
   level_data[1].speed_increase_len = 8;
+  level_data[1].titlescreen = level2_titlescreen;
 
   level_data[2].tiles = level3_tiles;
   level_data[2].map = level3_map;
@@ -516,6 +517,7 @@ void main(){
   level_data[2].next_level_len = 37;
   level_data[2].speedup = 5;
   level_data[2].speed_increase_len = 5;
+  level_data[2].titlescreen = level3_titlescreen;
 
   level_data[3].tiles = level4_tiles;
   level_data[3].map = level4_map;
@@ -533,6 +535,7 @@ void main(){
   level_data[3].next_level_len = 37;
   level_data[3].speedup = 5;
   level_data[3].speed_increase_len = 3;
+  level_data[3].titlescreen = level4_titlescreen;
 
   unsigned char* level_tiles;
   unsigned char* level_map;
@@ -571,13 +574,6 @@ void main(){
   set_win_tiles(14, 0, 2, 1, debug_tiles);
   move_win(7,136);
 
-  // SHOW_BKG;
-  // SHOW_WIN;
-  // SHOW_SPRITES;
-  // DISPLAY_ON;
-
-  current_level = 0;
-
   DISPLAY_ON;
 
   uint8_t x;
@@ -590,7 +586,6 @@ void main(){
     speed = 40;
     speed_factor = 0;
     old_speed_factor = 0;
-    score = 0;
     lives = 3;
 
     food_sprite_id = 37;
@@ -599,7 +594,6 @@ void main(){
     stop_play = 0;
     game_over = 0;
     current_level = 0;
-    score_increment = 1;
     move_direction = J_UP;
 
     dx, dy = 0;
@@ -607,24 +601,13 @@ void main(){
     tail1_xoffset = tail1_yoffset = 0;
     tail2_xoffset = tail2_yoffset = 0;
 
+    /*
+      Show level title screen
+    */
     fadeout();
+    show_titlescreen(level_data[current_level].titlescreen);
 
-    HIDE_SPRITES;
-    HIDE_WIN;
-
-    for (x = 0; x < 9; x++){
-      printf("                    ");
-    }
-    printf("     LEVEL %d        ", current_level+1);
-    for (x =0; x < 8; x++){
-      printf("                    ");
-    }
-    SHOW_BKG;
-    fadein();
-    waitpad(J_START);
-    waitpadup();
-
-    HIDE_BKG;
+    /* Start game */
 
     while (!game_over){
       /* Load Level */
@@ -646,13 +629,12 @@ void main(){
 
       /* Main code */
       set_bkg_tiles(0, 0, 20, 18, level_map);
-      score2tile(score, score_tiles);
 
-      fadeout();
+      // fadeout();
       SHOW_SPRITES;
       SHOW_BKG;
       SHOW_WIN;
-      fadein();
+      // fadein();
 
       next_snaketail_sprite_id = 0;
       snake_tail_ind = 0;
@@ -795,7 +777,6 @@ void main(){
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
             if (snake_tail_ind < level_data[current_level].next_level_len) {
               movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0);
-              score = score + score_increment;
               snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
               snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
               snake_tail[snake_tail_ind].sprite.size = snake_tail[snake_tail_ind-1].sprite.size;
@@ -817,8 +798,6 @@ void main(){
           }  
         }
 
-        score_increment = 1;
-        //score2tile(score, score_tiles);
         score2tile(speed, score_tiles);  // DEBUG ONLY, REMOVE!
         set_win_tiles(10,0, 3, 1, score_tiles);
         
@@ -892,23 +871,7 @@ void main(){
       else if (stop_play == 2){
         stop_play = 0;
         fadeout();
-
-        HIDE_SPRITES;
-        HIDE_WIN;
-
-        for (x = 0; x < 9; x++){
-          printf("                    ");
-        }
-        printf("     LEVEL %d        ", current_level+1);
-        for (x =0; x < 8; x++){
-          printf("                    ");
-        }
-        SHOW_BKG;
-        fadein();
-        waitpad(J_START);
-        waitpadup();
-
-        HIDE_BKG;
+        show_titlescreen(level_data[current_level+1].titlescreen);
       }
 
       if (lives == 0){
@@ -937,10 +900,12 @@ void main(){
     }
 
     if (game_over) {
-      game_over_screen(score);
+      fadeout();
+      show_finalscreen(gameover_titlescreen);
     }
     else if (stop_play == 3){
-      win_screen(score);
+      fadeout();
+      show_finalscreen(win_titlescreen);
     }
     HIDE_BKG;
     HIDE_WIN;
