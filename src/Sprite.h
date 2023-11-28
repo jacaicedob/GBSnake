@@ -6,8 +6,9 @@ struct Sprite {
     uint8_t x;
     uint8_t y;
     uint8_t size;
-    // uint8_t width;
-    // uint8_t height;
+    uint8_t timer;
+    uint8_t animation_frame;
+    char animation_state;
 };
 
 struct SnakePart {
