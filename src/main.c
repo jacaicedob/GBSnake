@@ -95,6 +95,7 @@ struct LevelData{
   short top_boundary;
   short bottom_boundary;
   unsigned char next_level_len;
+  short start_speed;
   unsigned char speedup;
   short speed_increase_len;
   unsigned char* titlescreen;
@@ -205,6 +206,7 @@ void show_titlescreen(unsigned char* titlescreen){
   move_bkg(0, 72);
   fadein();
 
+  play_leveltitle_sound();
   for (int i = 72; i >= 0; i--){
     move_bkg(0, i);
     wait_vbl_done();
@@ -460,6 +462,45 @@ void score2tile(uint8_t score, uint8_t* score_tiles){
     }
 }
 
+void play_eating_sound(){
+    NR10_REG = 0x37;
+    NR11_REG = 0X85;
+    NR12_REG = 0X43;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_leveltitle_sound(){
+    NR10_REG = 0x37;
+    NR11_REG = 0X85;
+    NR12_REG = 0X1F;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_key_sound(){
+    NR10_REG = 0x37;
+    NR11_REG = 0X85;
+    NR12_REG = 0X1F;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_dying_sound(){
+    NR41_REG = 0X00;
+    NR42_REG = 0XFB;
+    NR43_REG = 0X80;
+    NR44_REG = 0XC0;
+}
+
+void play_moving_sound(){
+    NR41_REG = 0X3A;
+    NR42_REG = 0XA1;
+    NR43_REG = 0X00;
+    NR44_REG = 0XC0;
+}
+
+
 void main(){
   struct SnakePart* tmphead;
   font_t min_font;
@@ -505,10 +546,11 @@ void main(){
   level_data[0].top_boundary = 3;
   level_data[0].bottom_boundary = 14;
   level_data[0].next_level_len = 36;
+  level_data[0].start_speed = 40;
   level_data[0].speedup = 5;
   level_data[0].speed_increase_len = 10;
   level_data[0].titlescreen = level1_titlescreen;
-  level_data[0].food_timer = 30;
+  level_data[0].food_timer = 20;
 
   level_data[1].tiles = level2_tiles;
   level_data[1].map = level2_map;
@@ -524,10 +566,11 @@ void main(){
   level_data[1].top_boundary = 5;
   level_data[1].bottom_boundary = 14;
   level_data[1].next_level_len = 36;
+  level_data[1].start_speed = 35;
   level_data[1].speedup = 5;
-  level_data[1].speed_increase_len = 8;
+  level_data[1].speed_increase_len = 10;
   level_data[1].titlescreen = level2_titlescreen;
-  level_data[1].food_timer = 25;
+  level_data[1].food_timer = 20;
 
   level_data[2].tiles = level3_tiles;
   level_data[2].map = level3_map;
@@ -543,10 +586,11 @@ void main(){
   level_data[2].top_boundary = 3;
   level_data[2].bottom_boundary = 12;
   level_data[2].next_level_len = 36;
+  level_data[2].start_speed = 30;
   level_data[2].speedup = 5;
-  level_data[2].speed_increase_len = 5;
+  level_data[2].speed_increase_len = 10;
   level_data[2].titlescreen = level3_titlescreen;
-  level_data[2].food_timer = 20;
+  level_data[2].food_timer = 15;
 
   level_data[3].tiles = level4_tiles;
   level_data[3].map = level4_map;
@@ -562,8 +606,9 @@ void main(){
   level_data[3].top_boundary = 1;
   level_data[3].bottom_boundary = 14;
   level_data[3].next_level_len = 36;
+  level_data[3].start_speed = 30;
   level_data[3].speedup = 5;
-  level_data[3].speed_increase_len = 3;
+  level_data[3].speed_increase_len = 10;
   level_data[3].titlescreen = level4_titlescreen;
   level_data[2].food_timer = 15;
 
@@ -604,6 +649,11 @@ void main(){
   set_win_tiles(14, 0, 3, 1, debug_tiles);
   move_win(7,136);
 
+  // Turn on Sound
+  NR52_REG = 0x80;  // Enable sound chip
+  NR50_REG = 0x77;  // Max volume on both speakers
+  NR51_REG = 0xBB;  // Enable CH1,2,4 on both speakers
+
   DISPLAY_ON;
 
   uint8_t x;
@@ -613,7 +663,6 @@ void main(){
     initrand(DIV_REG);
 
     input = 0x0;
-    speed = 40;
     speed_factor = 0;
     old_speed_factor = 0;
     lives = 3;
@@ -624,7 +673,6 @@ void main(){
     stop_play = 0;
     game_over = 0;
     current_level = 0;
-    
 
     dx, dy = 0;
     dx_coll, dy_coll = 0;
@@ -641,7 +689,6 @@ void main(){
 
     while (!game_over){
       /* Load Level */
-
       level_tiles = level_data[current_level].tiles;
       level_map = level_data[current_level].map;
       background_colliders = level_data[current_level].background_colliders;
@@ -762,7 +809,7 @@ void main(){
       next_snaketail_sprite_id++;
       snake_tail_ind++;
 
-      speed = 40;
+      speed = level_data[current_level].start_speed;
       speed_factor = 0;
       old_speed_factor = 0;
 
@@ -809,11 +856,20 @@ void main(){
         // Check collision with background obstacles    
         if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, background_colliders, debug_tiles)){
           stop_play = 1;
+          play_dying_sound();
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
+          play_moving_sound();
           move_snake(&snake_tail[0], dx, dy);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
+            if (food_sprite.spriteid == 39){
+              // play_key_sound();
+              play_eating_sound();
+            }
+            else {
+              play_eating_sound();
+            }
             if (snake_tail_ind < level_data[current_level].next_level_len) {
               snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
               snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -833,6 +889,7 @@ void main(){
           } 
           else if (head_tail_collision(snake_tail)){
             // Collided head with tail. End Game
+            play_dying_sound();
             stop_play = 1;
           }  
         }
@@ -842,6 +899,7 @@ void main(){
         
         if (((snake_tail_ind) == level_data[current_level].next_level_len) && (food_sprite.spriteid != 39)){
           // Deploy key
+          play_key_sound();
           movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1, &level_data[current_level]);
         }
         else if ((snake_tail_ind) > level_data[current_level].next_level_len){
@@ -852,7 +910,6 @@ void main(){
           }
           else {
             // WIN THE LEVEL
-            current_level++;
             stop_play = 2;
           }
         }
@@ -950,8 +1007,9 @@ void main(){
       }
       else if (stop_play == 2){
         stop_play = 0;
+        current_level++;
         fadeout();
-        show_titlescreen(level_data[current_level+1].titlescreen);
+        show_titlescreen(level_data[current_level].titlescreen);
       }
 
       if (lives == 0){
@@ -963,7 +1021,7 @@ void main(){
         break;
       }
       else {
-        speed = 40;
+        speed = level_data[current_level].start_speed;
         move_dir_buff[move_dir_buff_ind] = J_UP;
         lives_tiles[lives] = 0x0;
         set_win_tiles(6, 0, 3, 1, lives_tiles);
