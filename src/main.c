@@ -111,7 +111,7 @@ void wait(uint8_t n){
   }
 }
 
-void fadeout(){
+void fadeout(void){
   uint8_t i;
 
   for (i=0; i<4; i++){
@@ -137,7 +137,7 @@ void fadeout(){
   }
 }
 
-void fadein(){
+void fadein(void){
   uint8_t i;
 
   for (i=0; i<3; i++){
@@ -159,7 +159,7 @@ void fadein(){
   }
 }
 
-void flash_sprites(){
+void flash_sprites(void){
     uint8_t y;
 
     for (y=0; y<3; y++){
@@ -462,7 +462,7 @@ void score2tile(uint8_t score, uint8_t* score_tiles){
     }
 }
 
-void play_eating_sound(){
+void play_eating_sound(void){
     NR10_REG = 0x37;
     NR11_REG = 0X85;
     NR12_REG = 0X43;
@@ -470,7 +470,7 @@ void play_eating_sound(){
     NR14_REG = 0X86;
 }
 
-void play_leveltitle_sound(){
+void play_leveltitle_sound(void){
     NR10_REG = 0x37;
     NR11_REG = 0X85;
     NR12_REG = 0X1F;
@@ -478,7 +478,7 @@ void play_leveltitle_sound(){
     NR14_REG = 0X86;
 }
 
-void play_key_sound(){
+void play_key_sound(void){
     NR10_REG = 0x37;
     NR11_REG = 0X85;
     NR12_REG = 0X1F;
@@ -486,22 +486,77 @@ void play_key_sound(){
     NR14_REG = 0X86;
 }
 
-void play_dying_sound(){
+void play_dying_sound(void){
     NR41_REG = 0X00;
     NR42_REG = 0XFB;
     NR43_REG = 0X80;
     NR44_REG = 0XC0;
 }
 
-void play_moving_sound(){
+void play_moving_sound(void){
     NR41_REG = 0X3A;
     NR42_REG = 0XA1;
     NR43_REG = 0X00;
     NR44_REG = 0XC0;
 }
 
+char get_input(uint8_t *input, uint8_t *old_input, uint8_t *move_dir_buff, char *start_ind, uint8_t *old_direction){
+  char valid_input = 0;
 
-void main(){
+  *old_input = *input;
+  *input = joypad();
+  
+  /*
+    J_RIGHT = 0x1
+    J_LEFT  = 0x2
+    J_UP    = 0x4
+    J_DOWN  = 0x8
+  */
+  
+  /*
+  We only want to process the first time the button is pressed.
+
+  To do this, we check that the old_input was not the key we want,
+  and only then process the new input.
+  
+  I saw this concept on the Black Castle GB game github.
+    https://github.com/untoxa/BlackCastle/
+    include/global.h  --> KEY_TICKED(K)
+  */
+  if ((((*input & J_LEFT) && !(*old_input & J_LEFT)) || \
+       ((*input & J_RIGHT) && !(*old_input & J_RIGHT))) && \
+      ((*old_direction & 0x3) == 0)){
+    // case where J_RIGHT or J_LEFT were pressed and
+    // snake is not already moving RIGHT or LEFT.
+    // This is valid user input.
+    *start_ind = *start_ind + 1;
+    *start_ind = *start_ind & 0xF;
+    move_dir_buff[*start_ind] = *input & 0x3;
+    *old_direction = *input & 0x3;
+    valid_input |= 1;
+  }
+  if ((((*input & J_UP) && !(*old_input & J_UP)) || \
+       ((*input & J_DOWN) && !(*old_input & J_DOWN))) && \
+      ((*old_direction & 0xC) == 0)){
+    // case where J_UP or J_DOWN were pressed and
+    // snake is not already moving UP or DOWN.
+    // This is valid user input.
+    *start_ind = *start_ind + 1;
+    *start_ind = *start_ind & 0xF;
+    move_dir_buff[*start_ind] = *input & 0xC;
+    *old_direction = *input & 0xC;
+    valid_input |= 1;
+  }  
+  if ((*input & J_START) > 0){
+    // PAUSE GAME. Resume with the old direction.
+    waitpadup();
+    waitpad(J_START);
+    waitpadup();
+  }           
+  return valid_input;
+}
+
+void main(void){
   struct SnakePart* tmphead;
   font_t min_font;
   uint8_t font_tilemap_offset = 37;
@@ -514,8 +569,14 @@ void main(){
   char move_dir_buff_ind;
   char new_input;
   char start_ind;
+  char latest_ind;
+
+  for (char i = 0; i <= 15; i++){
+    move_dir_buff[i] = 0x00;
+  }
 
   uint8_t input;
+  uint8_t old_input;
   uint8_t wait_loop_ind;
   uint8_t speed;
   uint8_t speed_factor;
@@ -663,6 +724,7 @@ void main(){
     initrand(DIV_REG);
 
     input = 0x0;
+    old_input = input;
     speed_factor = 0;
     old_speed_factor = 0;
     lives = 3;
@@ -718,6 +780,7 @@ void main(){
       move_dir_buff_ind = 0;
       new_input = 0;
       start_ind = move_dir_buff_ind;
+      latest_ind = start_ind;
 
       /* Create food sprite */
       // Add code to randomly generate the x,y coordinates of the food. Copy to other places where we spawn new food.
@@ -814,7 +877,10 @@ void main(){
       old_speed_factor = 0;
 
       while(!stop_play){
+        new_input = 0;
         move_direction = move_dir_buff[move_dir_buff_ind];
+        old_direction = move_direction;
+        start_ind = move_dir_buff_ind;
 
         if ((move_direction & J_UP) == J_UP){
           debug_tiles[0] = 0x1 + 0x1; 
@@ -850,6 +916,8 @@ void main(){
           dx_coll = 0;
           dy_coll = 0;
         }
+
+        new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
         
         debug_tiles[2] = move_dir_buff_ind + 1;
         set_win_tiles(14, 0, 3, 1, debug_tiles);
@@ -860,9 +928,11 @@ void main(){
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
+          new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
           play_moving_sound();
           move_snake(&snake_tail[0], dx, dy);
           if (sprite_collision(&snake_tail[0].sprite, &food_sprite)){
+            new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
             if (food_sprite.spriteid == 39){
               // play_key_sound();
               play_eating_sound();
@@ -870,6 +940,7 @@ void main(){
             else {
               play_eating_sound();
             }
+            new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
             if (snake_tail_ind < level_data[current_level].next_level_len) {
               snake_tail[snake_tail_ind].sprite.x = snake_tail[snake_tail_ind-1].sprite.x;
               snake_tail[snake_tail_ind].sprite.y = snake_tail[snake_tail_ind-1].sprite.y;
@@ -897,6 +968,7 @@ void main(){
         score2tile(speed, score_tiles);  // DEBUG ONLY, REMOVE!
         set_win_tiles(10,0, 3, 1, score_tiles);
         
+        new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
         if (((snake_tail_ind) == level_data[current_level].next_level_len) && (food_sprite.spriteid != 39)){
           // Deploy key
           play_key_sound();
@@ -927,46 +999,10 @@ void main(){
           food_sprite.timer--;
         }
 
-        old_direction = move_direction;
-        start_ind = move_dir_buff_ind;
-        new_input = 0;
+        // old_direction = move_direction;
+        // start_ind = move_dir_buff_ind;
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
-          input = joypad();
-          
-          /*
-            J_RIGHT = 0x1
-            J_LEFT  = 0x2
-            J_UP    = 0x4
-            J_DOWN  = 0x8
-          */
-          if (((input & 0x3) > 0) && ((old_direction & 0x3) == 0)){
-            // case where J_RIGHT or J_LEFT were pressed and
-            // snake is not already moving RIGHT or LEFT.
-            // This is valid user input.
-            start_ind++;
-            start_ind = start_ind & 0xF;
-            move_dir_buff[start_ind] = input;
-            old_direction = input;
-            new_input = 1;
-          }
-          else if (((input & 0xC) > 0) && ((old_direction & 0xC) == 0)){
-            // case where J_UP or J_DOWN were pressed and
-            // snake is not already moving UP or DOWN.
-            // This is valid user input.
-            start_ind++;
-            start_ind = start_ind & 0xF;
-            move_dir_buff[start_ind] = input;
-            old_direction = input;
-            new_input = 1;
-          }  
-          else if ((input & J_START) > 0){
-            // PAUSE GAME. Resume with the old direction.
-            waitpadup();
-            waitpad(J_START);
-            waitpadup();
-            move_direction = old_direction;
-            break;
-          }           
+          new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
 
           // When timer expires, start food blinking animation
           if (food_sprite.timer == 0) {
@@ -993,9 +1029,13 @@ void main(){
           wait_vbl_done();
         }
         if (new_input == 1){
+          latest_ind = start_ind;
           move_dir_buff_ind++;
           move_dir_buff_ind = move_dir_buff_ind & 0xF;
-          new_input = 0;
+        }
+        else if (latest_ind != move_dir_buff_ind){
+          move_dir_buff_ind++;
+          move_dir_buff_ind = move_dir_buff_ind & 0xF;
         }
       // End level loop (while (!stop_play){})
       }
