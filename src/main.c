@@ -181,7 +181,7 @@ void flash_sprite(struct Sprite* sprite){
   }
 }
 
-void show_finalscreen(unsigned char* finalscreen){
+void show_finalscreen(unsigned char* finalscreen, char type){
   HIDE_SPRITES;
   HIDE_WIN;
   
@@ -189,6 +189,13 @@ void show_finalscreen(unsigned char* finalscreen){
 
   SHOW_BKG;
   fadein();
+  if (type == 0){
+    play_gameover_sound();
+  }
+  else if (type == 1){
+    play_wining_sound();
+  }
+
   waitpad(J_START);
   waitpadup();
   HIDE_BKG;
@@ -471,14 +478,30 @@ void play_eating_sound(void){
 }
 
 void play_leveltitle_sound(void){
-    NR10_REG = 0x37;
-    NR11_REG = 0X85;
-    NR12_REG = 0X1F;
+    NR10_REG = 0x75;
+    NR11_REG = 0X86;
+    NR12_REG = 0X87;
     NR13_REG = 0X75;
     NR14_REG = 0X86;
 }
 
 void play_key_sound(void){
+    NR10_REG = 0x35;
+    NR11_REG = 0X85;
+    NR12_REG = 0X47;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_gameover_sound(void){
+    NR10_REG = 0x1C;
+    NR11_REG = 0X89;
+    NR12_REG = 0XF7;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_wining_sound(void){
     NR10_REG = 0x37;
     NR11_REG = 0X85;
     NR12_REG = 0X1F;
@@ -671,7 +694,7 @@ void main(void){
   level_data[3].speedup = 5;
   level_data[3].speed_increase_len = 10;
   level_data[3].titlescreen = level4_titlescreen;
-  level_data[2].food_timer = 15;
+  level_data[3].food_timer = 15;
 
   unsigned char* level_tiles;
   unsigned char* level_map;
@@ -1079,11 +1102,11 @@ void main(void){
 
     if (game_over) {
       fadeout();
-      show_finalscreen(gameover_titlescreen);
+      show_finalscreen(gameover_titlescreen, 0);
     }
     else if (stop_play == 3){
       fadeout();
-      show_finalscreen(win_titlescreen);
+      show_finalscreen(win_titlescreen, 1);
     }
     HIDE_BKG;
     HIDE_WIN;
@@ -1101,7 +1124,7 @@ void main(void){
     REMOVE TO ALLOW FOR THE GAME TO RESTART
     ONCE THE MAP CORRUPTION IS DEBUGGED.
     */
-    show_finalscreen(restart_titlescreen);
+    show_finalscreen(restart_titlescreen, 2);
     SHOW_BKG;
     break;
 
