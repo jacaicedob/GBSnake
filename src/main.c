@@ -518,6 +518,7 @@ void movefood(struct Sprite* food, struct SnakePart* head, char* bkg_colliders, 
       // Disable the timer
       food->timer = 255;
     }
+      
 }
 
 void score2tile(uint8_t score, uint8_t* score_tiles){
@@ -636,9 +637,26 @@ char get_input(uint8_t *input, uint8_t *old_input, uint8_t *move_dir_buff, char 
   }  
   if ((*input & J_START) > 0){
     // PAUSE GAME. Resume with the old direction.
+    uint8_t pause_tiles[6]; 
+    pause_tiles[0] = 0x1A;
+    pause_tiles[1] = 0x0B;
+    pause_tiles[2] = 0x1F;
+    pause_tiles[3] = 0x1D;
+    pause_tiles[4] = 0x0F;
+    pause_tiles[5] = 0x0E;
+    set_win_tiles(10, 0, 6, 1, pause_tiles);
+
     waitpadup();
     waitpad(J_START);
     waitpadup();
+
+    pause_tiles[0] = 0x0;
+    pause_tiles[1] = 0x0;
+    pause_tiles[2] = 0x0;
+    pause_tiles[3] = 0x0;
+    pause_tiles[4] = 0x0;
+    pause_tiles[5] = 0x0;
+    set_win_tiles(10, 0, 6, 1, pause_tiles);
   }           
   return valid_input;
 }
@@ -680,7 +698,7 @@ void main(void){
 
   uint8_t score_tiles[3];
   uint8_t lives_tiles[3];
-  uint8_t progressbar_tiles[10];
+  uint8_t progressbar_tiles[11];
   uint8_t lives;
   
   struct LevelData level_data[4];
@@ -697,7 +715,7 @@ void main(void){
   level_data[0].right_boundary = 15;
   level_data[0].top_boundary = 3;
   level_data[0].bottom_boundary = 14;
-  level_data[0].next_level_len = 36;
+  level_data[0].next_level_len = 40;
   level_data[0].start_speed = 40;
   level_data[0].speedup = 5;
   level_data[0].speed_increase_len = 10;
@@ -717,7 +735,7 @@ void main(void){
   level_data[1].right_boundary = 13;
   level_data[1].top_boundary = 5;
   level_data[1].bottom_boundary = 14;
-  level_data[1].next_level_len = 36;
+  level_data[1].next_level_len = 40;
   level_data[1].start_speed = 35;
   level_data[1].speedup = 5;
   level_data[1].speed_increase_len = 10;
@@ -737,7 +755,7 @@ void main(void){
   level_data[2].right_boundary = 16;
   level_data[2].top_boundary = 3;
   level_data[2].bottom_boundary = 12;
-  level_data[2].next_level_len = 36;
+  level_data[2].next_level_len = 40;
   level_data[2].start_speed = 30;
   level_data[2].speedup = 5;
   level_data[2].speed_increase_len = 10;
@@ -757,17 +775,13 @@ void main(void){
   level_data[3].right_boundary = 16;
   level_data[3].top_boundary = 1;
   level_data[3].bottom_boundary = 14;
-  level_data[3].next_level_len = 36;
+  level_data[3].next_level_len = 40;
   level_data[3].start_speed = 30;
   level_data[3].speedup = 5;
   level_data[3].speed_increase_len = 10;
   level_data[3].titlescreen = level4_titlescreen;
   level_data[3].food_timer = 15;
 
-  unsigned char* level_tiles;
-  unsigned char* level_map;
-  unsigned char* background_colliders;
-  short level_ntiles;
   char current_level;
 
   char tail1_xoffset;
@@ -789,18 +803,9 @@ void main(void){
 
   /* Load sprite data */
   set_sprite_data(SNAKE_MEMIND, SNAKE_NTILES, snake_spritesheet_data);
-  // set_sprite_data(FOOD_MEMIND, FOOD_NTILES, food_spritesheet_data);
-  // set_sprite_tile(food_sprite_id, FOOD_BISCUIT);
-  // set_sprite_tile(food_sprite_id+1, FOOD_CARROT);
-  // set_sprite_tile(food_sprite_id+2, FOOD_TURNIP);
-  // set_sprite_tile(food_sprite_id+3, KEY);
 
   /* Load window */
-  // set_win_tiles(0, 0, 6, 1, lives_label);
-  // set_win_tiles(10, 0, 3, 1, score_tiles);
-  // set_win_tiles(14, 0, 3, 1, debug_tiles);
-  // move_win(7,136);
-  move_win(7,136);
+  move_win(7,128);
 
   // Turn on Sound
   NR52_REG = 0x80;  // Enable sound chip
@@ -843,34 +848,30 @@ void main(void){
 
     while (!game_over){
       /* Load Level */
-      level_tiles = level_data[current_level].tiles;
-      level_map = level_data[current_level].map;
-      background_colliders = level_data[current_level].background_colliders;
-      level_ntiles = level_data[current_level].ntiles;
-
       /* Load background */
-      lives_tilemap_offset = font_tilemap_offset + level_ntiles;
+      lives_tilemap_offset = font_tilemap_offset + level_data[current_level].ntiles;
       progressbar_tilemap_offset = lives_tilemap_offset + 1;
-      food_tilemap_offset = progressbar_tilemap_offset + 6;
-      set_bkg_data(font_tilemap_offset, level_ntiles, level_tiles);
+      food_tilemap_offset = progressbar_tilemap_offset + 7;
+      set_bkg_data(font_tilemap_offset, level_data[current_level].ntiles, level_data[current_level].tiles);
       set_bkg_data(lives_tilemap_offset, 1, snake_spritesheet_data);
-      set_bkg_data(progressbar_tilemap_offset, 6, progressbar_tiles_tiles);
+      set_bkg_data(progressbar_tilemap_offset, 7, progressbar_tiles_tiles);
       set_bkg_data(food_tilemap_offset, 4, food_spritesheet_tiles);
 
-      for (uint8_t i = 0; i < lives; i++){
-        lives_tiles[i] = font_tilemap_offset+level_ntiles;
-      }
-      set_win_tiles(16, 0, 3, 1, lives_tiles);
+      lives_tiles[0] = font_tilemap_offset + level_data[current_level].ntiles;
+      lives_tiles[1] = 0x22;
+      lives_tiles[2] = 0x1 + lives;
+      set_win_tiles(5, 0, 3, 1, lives_tiles);
 
-      progressbar_tiles[0] = progressbar_tilemap_offset;
-      for (uint8_t i = 1; i < 9; i++){
-        progressbar_tiles[i] = progressbar_tilemap_offset + 1;
+      progressbar_tiles[0] = progressbar_tilemap_offset; // timer tile
+      progressbar_tiles[1] = progressbar_tilemap_offset + 1; // left edge of bar
+      for (uint8_t i = 2; i < 10; i++){
+        progressbar_tiles[i] = progressbar_tilemap_offset + 2; // center of bar
       }
-      progressbar_tiles[9] = progressbar_tilemap_offset + 2;
-      set_win_tiles(1, 0, 10, 1, progressbar_tiles);
+      progressbar_tiles[10] = progressbar_tilemap_offset + 3; // right edge of bar
+      set_win_tiles(5, 1, 11, 1, progressbar_tiles);
 
       /* Main code */
-      set_bkg_tiles(0, 0, 20, 18, level_map);
+      set_bkg_tiles(0, 0, 20, 18, level_data[current_level].map);
 
       // fadeout();
       SHOW_SPRITES;
@@ -1025,7 +1026,7 @@ void main(void){
         debug_tiles[2] = move_dir_buff_ind + 1;
         // set_win_tiles(14, 0, 3, 1, debug_tiles);
         // Check collision with background obstacles    
-        if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, background_colliders, debug_tiles) == 1){
+        if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, level_data[current_level].background_colliders, debug_tiles) == 1){
           stop_play = 1;
           play_dying_sound();
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
@@ -1034,9 +1035,10 @@ void main(void){
           new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
           play_moving_sound();
           move_snake(&snake_tail[0], dx, dy);
-          if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y, background_colliders, debug_tiles) == 2) {
+          if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y, level_data[current_level].background_colliders, debug_tiles) == 2) {
             new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
             if (food_sprite.spriteid == 3){
+              // Key
               // play_key_sound();
               play_eating_sound();
             }
@@ -1055,7 +1057,14 @@ void main(void){
               snake_tail[snake_tail_ind].next = NULL;
               snake_tail_ind++;
               next_snaketail_sprite_id++;
-              movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, &level_data[current_level], food_tilemap_offset);
+              movefood(&food_sprite, &snake_tail[0], level_data[current_level].background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, &level_data[current_level], food_tilemap_offset);
+              progressbar_tiles[0] = progressbar_tilemap_offset; // timer tile
+              progressbar_tiles[1] = progressbar_tilemap_offset + 1; // left edge of bar
+              for (uint8_t i = 2; i < 10; i++){
+                progressbar_tiles[i] = progressbar_tilemap_offset + 2; // center of bar
+              }
+              progressbar_tiles[10] = progressbar_tilemap_offset + 3; // right edge of bar
+              set_win_tiles(5, 1, 11, 1, progressbar_tiles);
             }                    
             else {
               snake_tail_ind++;
@@ -1071,47 +1080,47 @@ void main(void){
         // score2tile(speed, score_tiles);  // DEBUG ONLY, REMOVE!
         // set_win_tiles(10,0, 3, 1, score_tiles);
         
-        switch (snake_tail_ind)
+        switch (food_sprite.timer)
         {
-          case 4:
-            progressbar_tiles[0] = progressbar_tilemap_offset + 3;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 8:
-            progressbar_tiles[1] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 12:
-            progressbar_tiles[2] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
+          case 18:
+            progressbar_tiles[10] = progressbar_tilemap_offset + 6; // First decrement
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
             break;
           case 16:
-            progressbar_tiles[3] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 20:
-            progressbar_tiles[4] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 24:
-            progressbar_tiles[5] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 28:
-            progressbar_tiles[6] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 32:
-            progressbar_tiles[7] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 36:
-            progressbar_tiles[8] = progressbar_tilemap_offset + 4;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
-            break;
-          case 40:
             progressbar_tiles[9] = progressbar_tilemap_offset + 5;
-            set_win_tiles(1, 0, 10, 1, progressbar_tiles);
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 14:
+            progressbar_tiles[8] = progressbar_tilemap_offset + 5;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 12:
+            progressbar_tiles[7] = progressbar_tilemap_offset + 5;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 10:
+            progressbar_tiles[6] = progressbar_tilemap_offset + 5;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 8:
+            progressbar_tiles[5] = progressbar_tilemap_offset + 5;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 6:
+            progressbar_tiles[4] = progressbar_tilemap_offset + 5;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 4:
+            progressbar_tiles[3] = progressbar_tilemap_offset + 5;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 2:
+            progressbar_tiles[2] = progressbar_tilemap_offset + 5;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
+            break;
+          case 0:
+            progressbar_tiles[1] = progressbar_tilemap_offset + 4;
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
             break;
           
           default:
@@ -1122,7 +1131,14 @@ void main(void){
         if (((snake_tail_ind) == level_data[current_level].next_level_len) && (food_sprite.spriteid != 3)){
           // Deploy key
           play_key_sound();
-          movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1, &level_data[current_level], food_tilemap_offset);
+          movefood(&food_sprite, &snake_tail[0], level_data[current_level].background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1, &level_data[current_level], food_tilemap_offset);
+          progressbar_tiles[0] = progressbar_tilemap_offset; // timer tile
+          progressbar_tiles[1] = progressbar_tilemap_offset + 1; // left edge of bar
+          for (uint8_t i = 2; i < 10; i++){
+            progressbar_tiles[i] = progressbar_tilemap_offset + 2; // center of bar
+          }
+          progressbar_tiles[10] = progressbar_tilemap_offset + 3; // right edge of bar
+          set_win_tiles(5, 1, 11, 1, progressbar_tiles);
         }
         else if ((snake_tail_ind) > level_data[current_level].next_level_len){
           // Grabbed key 
@@ -1172,7 +1188,14 @@ void main(void){
           // }
           // // When animation frames are done, respawn food
           // if (food_sprite.animation_frame == 0){
-            movefood(&food_sprite, &snake_tail[0], background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, &level_data[current_level], food_tilemap_offset);
+            movefood(&food_sprite, &snake_tail[0], level_data[current_level].background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, &level_data[current_level], food_tilemap_offset);
+            progressbar_tiles[0] = progressbar_tilemap_offset; // timer tile
+            progressbar_tiles[1] = progressbar_tilemap_offset + 1; // left edge of bar
+            for (uint8_t i = 2; i < 10; i++){
+              progressbar_tiles[i] = progressbar_tilemap_offset + 2; // center of bar
+            }
+            progressbar_tiles[10] = progressbar_tilemap_offset + 3; // right edge of bar
+            set_win_tiles(5, 1, 11, 1, progressbar_tiles);
           }
           else {
             // Wait until the Vertical Blanking is done
@@ -1199,6 +1222,11 @@ void main(void){
       else if (stop_play == 2){
         stop_play = 0;
         current_level++;
+        if ((current_level == 2) && (lives < 3)){
+          // Add a life after beating the second level
+          // and the player has less than 3 lives.
+          lives++;
+        }
         fadeout();
         show_titlescreen(level_data[current_level].titlescreen);
       }
@@ -1214,8 +1242,11 @@ void main(void){
       else {
         speed = level_data[current_level].start_speed;
         move_dir_buff[move_dir_buff_ind] = J_UP;
-        lives_tiles[lives] = 0x0;
-        set_win_tiles(16, 0, 3, 1, lives_tiles);
+        // lives_tiles[lives] = 0x0;
+        // set_win_tiles(16, 0, 3, 1, lives_tiles);
+        lives_tiles[0] = font_tilemap_offset + level_data[current_level].ntiles;
+        lives_tiles[2] = 0x1 + lives;
+        set_win_tiles(5, 3, 2, 1, lives_tiles);
     
         /* Reset all variables */
         tmphead = snake_tail;
@@ -1223,6 +1254,9 @@ void main(void){
           move_sprite(tmphead->sprite.spriteid, 0, 0);
           tmphead = tmphead->next;
         }
+
+        // Reset background_colliders and background sprites
+        removefood(food_sprite.x, food_sprite.y, level_data[current_level].map, level_data[current_level].background_colliders);
       }
     // End Game loop (while (!game_over){})
     }
@@ -1243,6 +1277,16 @@ void main(void){
     while(tmphead != NULL) {
       move_sprite(tmphead->sprite.spriteid, 0, 0);
       tmphead = tmphead->next;
+    }
+
+    // Reset background_colliders and background sprites
+    for (uint16_t i; i < (20*18); i++){
+      if (level_data[current_level].background_colliders[i] == 2){
+        level_data[current_level].background_colliders[i] == 0;
+      }
+      if (level_data[current_level].map[i] >= food_tilemap_offset){
+        level_data[current_level].map[i] == 0;
+      }
     }
 
     /* 
