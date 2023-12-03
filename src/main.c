@@ -198,7 +198,7 @@ void show_finalscreen(unsigned char* finalscreen, char type){
     play_wining_sound();
   }
 
-  waitpad(J_START);
+  waitpad(J_START | J_A | J_B);
   waitpadup();
   HIDE_BKG;
 }
@@ -221,7 +221,7 @@ void show_titlescreen(unsigned char* titlescreen){
     wait_vbl_done();
   }
 
-  waitpad(J_START);
+  waitpad(J_START | J_A | J_B);
   waitpadup();
   HIDE_BKG;
 }
@@ -1087,14 +1087,20 @@ void main(void){
             set_win_tiles(5, 1, 11, 1, progressbar_tiles);
             break;
           case 16:
+            progressbar_tiles[10] = progressbar_tilemap_offset + 6; // First decrement
             progressbar_tiles[9] = progressbar_tilemap_offset + 5;
             set_win_tiles(5, 1, 11, 1, progressbar_tiles);
             break;
           case 14:
+            progressbar_tiles[10] = progressbar_tilemap_offset + 6; // First decrement
+            progressbar_tiles[9] = progressbar_tilemap_offset + 5;
             progressbar_tiles[8] = progressbar_tilemap_offset + 5;
             set_win_tiles(5, 1, 11, 1, progressbar_tiles);
             break;
           case 12:
+            progressbar_tiles[10] = progressbar_tilemap_offset + 6; // First decrement
+            progressbar_tiles[9] = progressbar_tilemap_offset + 5;
+            progressbar_tiles[8] = progressbar_tilemap_offset + 5;
             progressbar_tiles[7] = progressbar_tilemap_offset + 5;
             set_win_tiles(5, 1, 11, 1, progressbar_tiles);
             break;
@@ -1222,8 +1228,8 @@ void main(void){
       else if (stop_play == 2){
         stop_play = 0;
         current_level++;
-        if ((current_level == 2) && (lives < 3)){
-          // Add a life after beating the second level
+        if ((current_level > 1) && (lives < 3)){
+          // Add a life after beating the level 2 and 3
           // and the player has less than 3 lives.
           lives++;
         }
