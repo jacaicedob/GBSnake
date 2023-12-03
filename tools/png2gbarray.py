@@ -221,10 +221,10 @@ def get_background_data_and_map(im, name, gb_code, offset=37, debug=False):
     return tile_data_array, tilemap_array
 
 # fn_path = "../assets/Snake-spritesheet.png"
-# fn_path = "../assets/food-spritesheet.png"
+fn_path = "../assets/food-spritesheet.png"
 # fn_path = "../assets/Background.png"
 # fn_path = "../assets/Level1.png"
-fn_path = "../assets/progressbar_tiles.png"
+# fn_path = "../assets/progressbar_tiles.png"
 
 filename = os.path.splitext(os.path.split(fn_path)[-1])[0].lower()
 filename = filename.replace("-","_")
