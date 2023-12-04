@@ -623,7 +623,7 @@ char get_input(uint8_t *input, uint8_t *old_input, uint8_t *move_dir_buff, char 
     *old_direction = *input & 0x3;
     valid_input |= 1;
   }
-  if ((((*input & J_UP) && !(*old_input & J_UP)) || \
+  else if ((((*input & J_UP) && !(*old_input & J_UP)) || \
        ((*input & J_DOWN) && !(*old_input & J_DOWN))) && \
       ((*old_direction & 0xC) == 0)){
     // case where J_UP or J_DOWN were pressed and
@@ -715,10 +715,10 @@ void main(void){
   level_data[0].right_boundary = 15;
   level_data[0].top_boundary = 3;
   level_data[0].bottom_boundary = 14;
-  level_data[0].next_level_len = 40;
-  level_data[0].start_speed = 40;
+  level_data[0].next_level_len = 20;
+  level_data[0].start_speed = 35;
   level_data[0].speedup = 5;
-  level_data[0].speed_increase_len = 10;
+  level_data[0].speed_increase_len = 5;
   level_data[0].titlescreen = level1_titlescreen;
   level_data[0].food_timer = 20;
 
@@ -735,10 +735,10 @@ void main(void){
   level_data[1].right_boundary = 13;
   level_data[1].top_boundary = 5;
   level_data[1].bottom_boundary = 14;
-  level_data[1].next_level_len = 40;
+  level_data[1].next_level_len = 25;
   level_data[1].start_speed = 35;
   level_data[1].speedup = 5;
-  level_data[1].speed_increase_len = 10;
+  level_data[1].speed_increase_len = 5;
   level_data[1].titlescreen = level2_titlescreen;
   level_data[1].food_timer = 20;
 
@@ -755,10 +755,10 @@ void main(void){
   level_data[2].right_boundary = 16;
   level_data[2].top_boundary = 3;
   level_data[2].bottom_boundary = 12;
-  level_data[2].next_level_len = 40;
+  level_data[2].next_level_len = 30;
   level_data[2].start_speed = 30;
-  level_data[2].speedup = 5;
-  level_data[2].speed_increase_len = 10;
+  level_data[2].speedup = 1;
+  level_data[2].speed_increase_len = 2;
   level_data[2].titlescreen = level3_titlescreen;
   level_data[2].food_timer = 15;
 
@@ -1029,6 +1029,28 @@ void main(void){
         if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, level_data[current_level].background_colliders, debug_tiles) == 1){
           stop_play = 1;
           play_dying_sound();
+          if (dx > 0) {
+            // Face right
+            set_sprite_tile(snake_tail[0].sprite.spriteid, SNAKE_HEAD_L);
+            set_sprite_prop(snake_tail[0].sprite.spriteid, S_FLIPX);
+          }
+          else if (dx < 0) {
+            // Face left
+            set_sprite_tile(snake_tail[0].sprite.spriteid, SNAKE_HEAD_L);
+            set_sprite_prop(snake_tail[0].sprite.spriteid, get_sprite_prop(0) & ~S_FLIPX);
+          }
+
+          if (dy > 0){
+            // Face down
+            set_sprite_tile(snake_tail[0].sprite.spriteid, SNAKE_HEAD_UP);
+            set_sprite_prop(snake_tail[0].sprite.spriteid, S_FLIPY);
+          }
+          else if (dy < 0) {
+            // Face up
+            set_sprite_tile(snake_tail[0].sprite.spriteid, SNAKE_HEAD_UP);
+            set_sprite_prop(snake_tail[0].sprite.spriteid, get_sprite_prop(0) & ~S_FLIPY);
+          }
+
           move_tail(&snake_tail[0], snake_tail[0].sprite.x, snake_tail[0].sprite.y);
         }
         else {
