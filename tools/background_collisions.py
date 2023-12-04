@@ -86,6 +86,7 @@ def onclick(event):
     fig.canvas.draw()
 
 
+# filename = "Level3.png"
 filename = "Level4.png"
 root_path = r"../assets"
 img_open = Image.open(os.path.join(root_path, filename))

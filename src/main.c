@@ -717,8 +717,8 @@ void main(void){
   level_data[0].bottom_boundary = 14;
   level_data[0].next_level_len = 20;
   level_data[0].start_speed = 35;
-  level_data[0].speedup = 5;
-  level_data[0].speed_increase_len = 5;
+  level_data[0].speedup = 1;
+  level_data[0].speed_increase_len = 1;
   level_data[0].titlescreen = level1_titlescreen;
   level_data[0].food_timer = 20;
 
@@ -737,8 +737,8 @@ void main(void){
   level_data[1].bottom_boundary = 14;
   level_data[1].next_level_len = 25;
   level_data[1].start_speed = 35;
-  level_data[1].speedup = 5;
-  level_data[1].speed_increase_len = 5;
+  level_data[1].speedup = 2;
+  level_data[1].speed_increase_len = 3;
   level_data[1].titlescreen = level2_titlescreen;
   level_data[1].food_timer = 20;
 
@@ -760,7 +760,7 @@ void main(void){
   level_data[2].speedup = 1;
   level_data[2].speed_increase_len = 2;
   level_data[2].titlescreen = level3_titlescreen;
-  level_data[2].food_timer = 15;
+  level_data[2].food_timer = 20;
 
   level_data[3].tiles = level4_tiles;
   level_data[3].map = level4_map;
@@ -777,10 +777,10 @@ void main(void){
   level_data[3].bottom_boundary = 14;
   level_data[3].next_level_len = 40;
   level_data[3].start_speed = 30;
-  level_data[3].speedup = 5;
-  level_data[3].speed_increase_len = 10;
+  level_data[3].speedup = 1;
+  level_data[3].speed_increase_len = 3;
   level_data[3].titlescreen = level4_titlescreen;
-  level_data[3].food_timer = 15;
+  level_data[3].food_timer = 20;
 
   char current_level;
 
