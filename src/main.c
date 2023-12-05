@@ -2,6 +2,7 @@
 #include <gbdk/font.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <rand.h>
 
 #include "Sprite.h"
@@ -11,19 +12,20 @@
 #include "progressbar_tiles_tiles_py.h"
 #include "windowmap.h"
 
-#include "level_title_screens.h"
-#include "level1_tiles_py.h"
-#include "level1_map_py.h"
-#include "level1_colliders.h"
-#include "level2_tiles_py.h"
-#include "level2_map_py.h"
-#include "level2_colliders.h"
-#include "level3_tiles_py.h"
-#include "level3_map_py.h"
-#include "level3_colliders.h"
-#include "level4_tiles_py.h"
-#include "level4_map_py.h"
-#include "level4_colliders.h"
+#include "data.h"
+// #include "level_title_screens.h"
+// #include "level1_tiles_py.h"
+// #include "level1_map_py.h"
+// #include "level1_colliders.h"
+// #include "level2_tiles_py.h"
+// #include "level2_map_py.h"
+// #include "level2_colliders.h"
+// #include "level3_tiles_py.h"
+// #include "level3_map_py.h"
+// #include "level3_colliders.h"
+// #include "level4_tiles_py.h"
+// #include "level4_map_py.h"
+// #include "level4_colliders.h"
 
 #define SNAKE_MAX_SIZE 40
 
@@ -81,28 +83,6 @@ uint8_t LEVEL_FOOD_STARTX = 72;
 uint8_t LEVEL_FOOD_STARTY = 50;
 
 void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady);
-
-struct LevelData{
-  unsigned char* tiles;
-  unsigned char* map;
-  unsigned char* background_colliders;
-  short ntiles;
-  short head_startx;
-  short head_starty;
-  unsigned char head_dir;
-  short food_startx;
-  short food_starty;
-  short left_boundary;
-  short right_boundary;
-  short top_boundary;
-  short bottom_boundary;
-  unsigned char next_level_len;
-  short start_speed;
-  unsigned char speedup;
-  short speed_increase_len;
-  unsigned char* titlescreen;
-  short food_timer;
-};
 
 void wait(uint8_t n){
   // Interrupt-based delay.
@@ -199,6 +179,29 @@ void show_finalscreen(unsigned char* finalscreen, char type){
   }
 
   waitpad(J_START | J_A | J_B);
+  waitpadup();
+  HIDE_BKG;
+}
+
+void show_game_titlescreen(unsigned char* titlescreen){
+  HIDE_SPRITES;
+  HIDE_WIN;
+  
+  set_bkg_tiles(0, 0, 20, 18, titlescreen);
+
+  SHOW_BKG;
+  
+  // Scroll background so it looks it comes down from the top of the screen
+  // move_bkg(0, 72);
+  fadein();
+
+  // play_title_music();
+  // for (int i = 72; i >= 0; i--){
+    // move_bkg(0, i);
+    // wait_vbl_done();
+  // }
+
+  waitpad(J_START);
   waitpadup();
   HIDE_BKG;
 }
@@ -455,7 +458,7 @@ void removefood(uint8_t x, uint8_t y, unsigned char *map, unsigned char *backgro
   set_bkg_tiles(0, 0, 20, 18, map);
 }
 
-void movefood(struct Sprite* food, struct SnakePart* head, char* bkg_colliders, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles, unsigned char key, struct LevelData* level_data, uint8_t food_tilemap_offset){
+void movefood(struct Sprite* food, struct SnakePart* head, unsigned char* bkg_colliders, unsigned char* map, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles, unsigned char key, uint8_t food_tilemap_offset, uint8_t food_timer){
     initrand(DIV_REG);
     /* This function places a new food item at the location of the snake's tail tip */
     uint8_t collision;
@@ -507,18 +510,17 @@ void movefood(struct Sprite* food, struct SnakePart* head, char* bkg_colliders, 
     }
     food->spriteid = new_spriteid;
 
-    replacefood(food->spriteid, food->x, food->y, randx, randy, level_data->map, level_data->background_colliders, food_tilemap_offset);
+    replacefood(food->spriteid, food->x, food->y, randx, randy, map, bkg_colliders, food_tilemap_offset);
     food->x = randx;
     food->y = randy; 
 
-    food->timer = level_data->food_timer;
+    food->timer = food_timer;
     food->animation_frame = 20;
 
     if (key){
       // Disable the timer
       food->timer = 255;
     }
-      
 }
 
 void score2tile(uint8_t score, uint8_t* score_tiles){
@@ -701,86 +703,92 @@ void main(void){
   uint8_t progressbar_tiles[11];
   uint8_t lives;
   
-  struct LevelData level_data[4];
-  level_data[0].tiles = level1_tiles;
-  level_data[0].map = level1_map;
-  level_data[0].background_colliders = level1_background_colliders;
-  level_data[0].ntiles = level1_ntiles;
-  level_data[0].head_startx = 80;
-  level_data[0].head_starty = 80;
-  level_data[0].head_dir = 1; // Up
-  level_data[0].food_startx = 72;
-  level_data[0].food_starty = 50;
-  level_data[0].left_boundary = 4;
-  level_data[0].right_boundary = 15;
-  level_data[0].top_boundary = 3;
-  level_data[0].bottom_boundary = 14;
-  level_data[0].next_level_len = 20;
-  level_data[0].start_speed = 35;
-  level_data[0].speedup = 1;
-  level_data[0].speed_increase_len = 1;
-  level_data[0].titlescreen = level1_titlescreen;
-  level_data[0].food_timer = 20;
-
-  level_data[1].tiles = level2_tiles;
-  level_data[1].map = level2_map;
-  level_data[1].background_colliders = level2_background_colliders;
-  level_data[1].ntiles = level2_ntiles;
-  level_data[1].head_startx = 104;
-  level_data[1].head_starty = 120;
-  level_data[1].head_dir = 1; // Up
-  level_data[1].food_startx = 48;
-  level_data[1].food_starty = 88;
-  level_data[1].left_boundary = 3;
-  level_data[1].right_boundary = 13;
-  level_data[1].top_boundary = 5;
-  level_data[1].bottom_boundary = 14;
-  level_data[1].next_level_len = 25;
-  level_data[1].start_speed = 35;
-  level_data[1].speedup = 2;
-  level_data[1].speed_increase_len = 3;
-  level_data[1].titlescreen = level2_titlescreen;
-  level_data[1].food_timer = 20;
-
-  level_data[2].tiles = level3_tiles;
-  level_data[2].map = level3_map;
-  level_data[2].background_colliders = level3_background_colliders;
-  level_data[2].ntiles = level3_ntiles;
-  level_data[2].head_startx = 72;
-  level_data[2].head_starty = 80;
-  level_data[2].head_dir = 4; // Right
-  level_data[2].food_startx = 72;
-  level_data[2].food_starty = 96;
-  level_data[2].left_boundary = 7;
-  level_data[2].right_boundary = 16;
-  level_data[2].top_boundary = 3;
-  level_data[2].bottom_boundary = 12;
-  level_data[2].next_level_len = 30;
-  level_data[2].start_speed = 30;
-  level_data[2].speedup = 1;
-  level_data[2].speed_increase_len = 2;
-  level_data[2].titlescreen = level3_titlescreen;
-  level_data[2].food_timer = 20;
-
-  level_data[3].tiles = level4_tiles;
-  level_data[3].map = level4_map;
-  level_data[3].background_colliders = level4_background_colliders;
-  level_data[3].ntiles = level4_ntiles;
-  level_data[3].head_startx = 112;
-  level_data[3].head_starty = 32;
-  level_data[3].head_dir = 2; // Down
-  level_data[3].food_startx = 128;
-  level_data[3].food_starty = 120;
-  level_data[3].left_boundary = 7;
-  level_data[3].right_boundary = 16;
-  level_data[3].top_boundary = 1;
-  level_data[3].bottom_boundary = 14;
-  level_data[3].next_level_len = 40;
-  level_data[3].start_speed = 30;
-  level_data[3].speedup = 1;
-  level_data[3].speed_increase_len = 3;
-  level_data[3].titlescreen = level4_titlescreen;
-  level_data[3].food_timer = 20;
+  const struct LevelData level_data[] = {
+    {
+      .tiles = level1_tiles,
+      .map = level1_map,
+      .background_colliders = level1_background_colliders,
+      .ntiles = level1_ntiles,
+      .head_startx = 80,
+      .head_starty = 80,
+      .head_dir = 1, // Up
+      .food_startx = 72,
+      .food_starty = 50,
+      .left_boundary = 4,
+      .right_boundary = 15,
+      .top_boundary = 3,
+      .bottom_boundary = 14,
+      .next_level_len = 20,
+      .start_speed = 35,
+      .speedup = 1,
+      .speed_increase_len = 1,
+      .titlescreen = level1_titlescreen,
+      .food_timer = 20
+    },
+    {
+      .tiles = level2_tiles,
+      .map = level2_map,
+      .background_colliders = level2_background_colliders,
+      .ntiles = level2_ntiles,
+      .head_startx = 104,
+      .head_starty = 120,
+      .head_dir = 1, // Up
+      .food_startx = 48,
+      .food_starty = 88,
+      .left_boundary = 3,
+      .right_boundary = 13,
+      .top_boundary = 5,
+      .bottom_boundary = 14,
+      .next_level_len = 25,
+      .start_speed = 35,
+      .speedup = 2,
+      .speed_increase_len = 3,
+      .titlescreen = level2_titlescreen,
+      .food_timer = 20
+    },
+    {
+      .tiles = level3_tiles,
+      .map = level3_map,
+      .background_colliders = level3_background_colliders,
+      .ntiles = level3_ntiles,
+      .head_startx = 72,
+      .head_starty = 80,
+      .head_dir = 4, // Right
+      .food_startx = 72,
+      .food_starty = 96,
+      .left_boundary = 7,
+      .right_boundary = 16,
+      .top_boundary = 3,
+      .bottom_boundary = 12,
+      .next_level_len = 30,
+      .start_speed = 30,
+      .speedup = 1,
+      .speed_increase_len = 2,
+      .titlescreen = level3_titlescreen,
+      .food_timer = 20
+    },
+    {
+      .tiles = level4_tiles,
+      .map = level4_map,
+      .background_colliders = level4_background_colliders,
+      .ntiles = level4_ntiles,
+      .head_startx = 112,
+      .head_starty = 32,
+      .head_dir = 2, // Down
+      .food_startx = 120,
+      .food_starty = 120,
+      .left_boundary = 7,
+      .right_boundary = 16,
+      .top_boundary = 1,
+      .bottom_boundary = 14,
+      .next_level_len = 40,
+      .start_speed = 30,
+      .speedup = 1,
+      .speed_increase_len = 3,
+      .titlescreen = level4_titlescreen,
+      .food_timer = 20
+    }
+  };
 
   char current_level;
 
@@ -788,6 +796,9 @@ void main(void){
   char tail1_yoffset;
   char tail2_xoffset;
   char tail2_yoffset;
+
+  unsigned char current_map[360];
+  unsigned char current_bkg_colliders[360];
   
   int8_t dx;
   int8_t dy;
@@ -842,12 +853,23 @@ void main(void){
       Show level title screen
     */
     fadeout();
+    SWITCH_ROM(5);
+    show_game_titlescreen(game_titlescreen);
     show_titlescreen(level_data[current_level].titlescreen);
 
     /* Start game */
 
     while (!game_over){
+
       /* Load Level */
+      SWITCH_ROM(current_level+1);
+
+      // Copy background map and background colliders to Bank0 RAM
+      for (int16_t i = 0; i < 360; i++){
+        current_map[i] = level_data[current_level].map[i];
+        current_bkg_colliders[i] = level_data[current_level].background_colliders[i];
+      }
+
       /* Load background */
       lives_tilemap_offset = font_tilemap_offset + level_data[current_level].ntiles;
       progressbar_tilemap_offset = lives_tilemap_offset + 1;
@@ -871,7 +893,7 @@ void main(void){
       set_win_tiles(5, 1, 11, 1, progressbar_tiles);
 
       /* Main code */
-      set_bkg_tiles(0, 0, 20, 18, level_data[current_level].map);
+      set_bkg_tiles(0, 0, 20, 18, current_map);
 
       // fadeout();
       SHOW_SPRITES;
@@ -895,7 +917,7 @@ void main(void){
       food_sprite.timer = level_data[current_level].food_timer;
       food_sprite.animation_frame = 20;
       food_sprite.animation_state = 0;
-      placefood(food_sprite.spriteid, food_sprite.x, food_sprite.y, level_data[current_level].map, level_data[current_level].background_colliders, food_tilemap_offset);
+      placefood(food_sprite.spriteid, food_sprite.x, food_sprite.y, current_map, current_bkg_colliders, food_tilemap_offset);
       
       /* Create Snake head at index 0 of snake_tail array*/
       snake_tail[snake_tail_ind].sprite.x = level_data[current_level].head_startx;
@@ -1026,7 +1048,7 @@ void main(void){
         debug_tiles[2] = move_dir_buff_ind + 1;
         // set_win_tiles(14, 0, 3, 1, debug_tiles);
         // Check collision with background obstacles    
-        if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, level_data[current_level].background_colliders, debug_tiles) == 1){
+        if (background_collision(snake_tail[0].sprite.x+dx_coll, snake_tail[0].sprite.y+dy_coll, current_bkg_colliders, debug_tiles) == 1){
           stop_play = 1;
           play_dying_sound();
           if (dx > 0) {
@@ -1057,7 +1079,7 @@ void main(void){
           new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
           play_moving_sound();
           move_snake(&snake_tail[0], dx, dy);
-          if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y, level_data[current_level].background_colliders, debug_tiles) == 2) {
+          if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y, current_bkg_colliders, debug_tiles) == 2) {
             new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
             if (food_sprite.spriteid == 3){
               // Key
@@ -1079,7 +1101,7 @@ void main(void){
               snake_tail[snake_tail_ind].next = NULL;
               snake_tail_ind++;
               next_snaketail_sprite_id++;
-              movefood(&food_sprite, &snake_tail[0], level_data[current_level].background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, &level_data[current_level], food_tilemap_offset);
+              movefood(&food_sprite, &snake_tail[0], current_bkg_colliders, current_map, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, food_tilemap_offset, level_data[current_level].food_timer);
               progressbar_tiles[0] = progressbar_tilemap_offset; // timer tile
               progressbar_tiles[1] = progressbar_tilemap_offset + 1; // left edge of bar
               for (uint8_t i = 2; i < 10; i++){
@@ -1159,7 +1181,7 @@ void main(void){
         if (((snake_tail_ind) == level_data[current_level].next_level_len) && (food_sprite.spriteid != 3)){
           // Deploy key
           play_key_sound();
-          movefood(&food_sprite, &snake_tail[0], level_data[current_level].background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1, &level_data[current_level], food_tilemap_offset);
+          movefood(&food_sprite, &snake_tail[0], current_bkg_colliders, current_map, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 1, food_tilemap_offset, level_data[current_level].food_timer);
           progressbar_tiles[0] = progressbar_tilemap_offset; // timer tile
           progressbar_tiles[1] = progressbar_tilemap_offset + 1; // left edge of bar
           for (uint8_t i = 2; i < 10; i++){
@@ -1198,25 +1220,8 @@ void main(void){
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
           new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
 
-          // When timer expires, start food blinking animation
           if (food_sprite.timer == 0) {
-            // switch (food_sprite.animation_state){
-              // case 0:
-                // // Hide
-                // removefood(food_sprite.x, food_sprite.y, level_data[current_level].map, level_data[current_level].background_colliders);
-                // food_sprite.animation_state = 1;
-                // break;
-              // case 1:
-                // // Show
-                // placefood(food_sprite.spriteid, food_sprite.x, food_sprite.y, level_data[current_level].map, level_data[current_level].background_colliders, food_tilemap_offset);
-                // food_sprite.animation_state = 0;
-                // break;
-            // }
-            // food_sprite.animation_frame--;
-          // }
-          // // When animation frames are done, respawn food
-          // if (food_sprite.animation_frame == 0){
-            movefood(&food_sprite, &snake_tail[0], level_data[current_level].background_colliders, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, &level_data[current_level], food_tilemap_offset);
+            movefood(&food_sprite, &snake_tail[0], current_bkg_colliders, current_map, level_data[current_level].left_boundary, level_data[current_level].right_boundary, level_data[current_level].top_boundary, level_data[current_level].bottom_boundary, debug_tiles, 0, food_tilemap_offset, level_data[current_level].food_timer);
             progressbar_tiles[0] = progressbar_tilemap_offset; // timer tile
             progressbar_tiles[1] = progressbar_tilemap_offset + 1; // left edge of bar
             for (uint8_t i = 2; i < 10; i++){
@@ -1256,6 +1261,7 @@ void main(void){
           lives++;
         }
         fadeout();
+        SWITCH_ROM(5);
         show_titlescreen(level_data[current_level].titlescreen);
       }
 
@@ -1284,17 +1290,19 @@ void main(void){
         }
 
         // Reset background_colliders and background sprites
-        removefood(food_sprite.x, food_sprite.y, level_data[current_level].map, level_data[current_level].background_colliders);
+        removefood(food_sprite.x, food_sprite.y, current_map, current_bkg_colliders);
       }
     // End Game loop (while (!game_over){})
     }
 
     if (game_over) {
       fadeout();
+      SWITCH_ROM(5);
       show_finalscreen(gameover_titlescreen, 0);
     }
     else if (stop_play == 3){
       fadeout();
+      SWITCH_ROM(5);
       show_finalscreen(win_titlescreen, 1);
     }
     HIDE_BKG;
@@ -1307,24 +1315,24 @@ void main(void){
       tmphead = tmphead->next;
     }
 
-    // Reset background_colliders and background sprites
-    for (uint16_t i; i < (20*18); i++){
-      if (level_data[current_level].background_colliders[i] == 2){
-        level_data[current_level].background_colliders[i] == 0;
-      }
-      if (level_data[current_level].map[i] >= food_tilemap_offset){
-        level_data[current_level].map[i] == 0;
-      }
-    }
+    // // Reset background_colliders and background sprites
+    // for (uint16_t i; i < (20*18); i++){
+      // if (level_data[current_level].background_colliders[i] == 2){
+        // level_data[current_level].background_colliders[i] == 0;
+      // }
+      // if (level_data[current_level].map[i] >= food_tilemap_offset){
+        // level_data[current_level].map[i] == 0;
+      // }
+    // }
 
-    /* 
-    End the program: 
-    REMOVE TO ALLOW FOR THE GAME TO RESTART
-    ONCE THE MAP CORRUPTION IS DEBUGGED.
-    */
-    show_finalscreen(restart_titlescreen, 2);
-    SHOW_BKG;
-    break;
+    // /* 
+    // End the program: 
+    // REMOVE TO ALLOW FOR THE GAME TO RESTART
+    // ONCE THE MAP CORRUPTION IS DEBUGGED.
+    // */
+    // show_finalscreen(restart_titlescreen, 2);
+    // SHOW_BKG;
+    // break;
 
   // End system loop (while (1){})
   }

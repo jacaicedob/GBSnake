@@ -2,7 +2,7 @@
 Number of tiles: 33
 */
 
-unsigned char level2_tiles[] = 
+const unsigned char level2_tiles[] = 
 {
   0X01,0X01,0X43,0X02,0XA7,0X04,0X0F,0X0D,0X0F,0X08,0X9F,0X16,0X7F,0X31,0X3F,0X20,
   0X80,0X80,0XC4,0X40,0XEA,0X20,0XF0,0XB0,0XF0,0X10,0XF9,0X68,0XFE,0X8C,0XFC,0X04,
