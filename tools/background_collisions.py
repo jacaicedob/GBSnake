@@ -86,8 +86,10 @@ def onclick(event):
     fig.canvas.draw()
 
 
+filename = "Level1.png"
+# filename = "Level2.png"
 # filename = "Level3.png"
-filename = "Level4.png"
+# filename = "Level4.png"
 root_path = r"../assets"
 img_open = Image.open(os.path.join(root_path, filename))
 
@@ -118,7 +120,7 @@ plt.show()
 
 # response = input("Export collision array? ")
 # if "y" in response.lower():
-s = "unsigned char background_colliders [] = \n{"
+s = "const unsigned char background_colliders [] = \n{"
 for ind in range(collisions.shape[0]):
     value = hex(int(collisions[ind]))
     if ind % stride == 0:

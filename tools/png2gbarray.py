@@ -170,13 +170,13 @@ def get_background_data_and_map(im, name, gb_code, offset=0, debug=False):
     tile_data_array = get_sprite_array(tilemap, f"{filename}", gb_code, debug=True)
     tile_data_array = tile_data_array.replace("data", "tiles")
 
-    tile_data_array = f"/*\nNumber of tiles: {len(unique_tiles)}\n*/\n\n{tile_data_array}"
+    tmp = f"const unsigned char {filename}_ntiles = {len(unique_tiles)};"
+    tile_data_array = f"/*\nNumber of tiles: {len(unique_tiles)}\n*/\n\n{tmp}\n{tile_data_array}"
 
     if debug:
         print(tile_data_array)
 
     tilemap_array = f"/*\nTile map size: {stride}x{int(ntiles/stride)}\n*/\n\n"
-    tilemap_array += f"const short {filename}_ntiles = {len(unique_tiles)};\n"
     tilemap_array += f"const unsigned char {filename}_map[] = \n"
     tilemap_array += "{"
     for i in range(ntiles):

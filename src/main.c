@@ -459,7 +459,7 @@ void removefood(uint8_t x, uint8_t y, unsigned char *map, unsigned char *backgro
   set_bkg_based_tiles(0, 0, 20, 18, map, FONT_TILE_OFFSET);
 }
 
-void movefood(struct Sprite* food, struct SnakePart* head, unsigned char* bkg_colliders, unsigned char* map, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles, unsigned char key, uint8_t food_tilemap_offset, uint8_t food_timer){
+void movefood(struct Sprite* food, struct SnakePart* head, unsigned char* bkg_colliders, unsigned char* map, unsigned char lbound, unsigned char rbound, unsigned char tbound, unsigned char bbound, uint8_t* debug_tiles, unsigned char key, uint8_t food_tilemap_offset, char food_timer){
     initrand(DIV_REG);
     /* This function places a new food item at the location of the snake's tail tip */
     uint8_t collision;
@@ -708,7 +708,7 @@ void main(void){
       .tiles = level1_tiles,
       .map = level1_map,
       .background_colliders = level1_background_colliders,
-      .ntiles = level1_ntiles,
+      .ntiles = 16,  // level1_ntiles, Why did this stop working?
       .head_startx = 80,
       .head_starty = 80,
       .head_dir = 1, // Up
@@ -729,7 +729,7 @@ void main(void){
       .tiles = level2_tiles,
       .map = level2_map,
       .background_colliders = level2_background_colliders,
-      .ntiles = level2_ntiles,
+      .ntiles = 33,  // level2_ntiles, Why did this stop working?
       .head_startx = 104,
       .head_starty = 120,
       .head_dir = 1, // Up
@@ -750,7 +750,7 @@ void main(void){
       .tiles = level3_tiles,
       .map = level3_map,
       .background_colliders = level3_background_colliders,
-      .ntiles = level3_ntiles,
+      .ntiles = 24,  // level3_ntiles, Why did this stop working?
       .head_startx = 72,
       .head_starty = 80,
       .head_dir = 4, // Right
@@ -771,8 +771,8 @@ void main(void){
       .tiles = level4_tiles,
       .map = level4_map,
       .background_colliders = level4_background_colliders,
-      .ntiles = level4_ntiles,
-      .head_startx = 112,
+      .ntiles = 13,  // level4_ntiles, Why did this stop working?
+      .head_startx = 104,
       .head_starty = 32,
       .head_dir = 2, // Down
       .food_startx = 120,
@@ -860,7 +860,6 @@ void main(void){
     /* Start game */
 
     while (!game_over){
-
       /* Load Level */
       SWITCH_ROM(current_level+1);
 
@@ -879,6 +878,8 @@ void main(void){
       set_bkg_data(progressbar_tilemap_offset, 7, progressbar_tiles_tiles);
       set_bkg_data(food_tilemap_offset, 4, food_spritesheet_tiles);
 
+      set_bkg_based_tiles(0, 0, 20, 18, current_map, FONT_TILE_OFFSET);
+
       lives_tiles[0] = FONT_TILE_OFFSET + level_data[current_level].ntiles;
       lives_tiles[1] = 0x22;
       lives_tiles[2] = 0x1 + lives;
@@ -891,9 +892,6 @@ void main(void){
       }
       progressbar_tiles[10] = progressbar_tilemap_offset + 3; // right edge of bar
       set_win_tiles(5, 1, 11, 1, progressbar_tiles);
-
-      /* Main code */
-      set_bkg_based_tiles(0, 0, 20, 18, current_map, FONT_TILE_OFFSET);
 
       // fadeout();
       SHOW_SPRITES;
@@ -1276,11 +1274,9 @@ void main(void){
       else {
         speed = level_data[current_level].start_speed;
         move_dir_buff[move_dir_buff_ind] = J_UP;
-        // lives_tiles[lives] = 0x0;
-        // set_win_tiles(16, 0, 3, 1, lives_tiles);
         lives_tiles[0] = FONT_TILE_OFFSET + level_data[current_level].ntiles;
         lives_tiles[2] = 0x1 + lives;
-        set_win_tiles(5, 3, 2, 1, lives_tiles);
+        set_win_tiles(5, 0, 3, 1, lives_tiles);
     
         /* Reset all variables */
         tmphead = snake_tail;

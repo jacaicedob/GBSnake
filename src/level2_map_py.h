@@ -2,7 +2,6 @@
 Tile map size: 20x18
 */
 
-const short level2_ntiles = 33;
 const unsigned char level2_map[] = 
 {
   0X00,0X01,0X02,0X03,0X04,0X05,0X05,0X06,0X07,0X08,0X05,0X09,0X03,0X0A,0X0B,0X0B,0X0B,0X0B,0X00,0X01,

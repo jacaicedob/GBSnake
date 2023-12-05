@@ -2,25 +2,25 @@
 
 extern const unsigned char level1_background_colliders [];
 extern const unsigned char level1_tiles[];
-extern const short level1_ntiles;
+extern const unsigned char level1_ntiles;
 extern const unsigned char level1_map[];
 extern const unsigned char level1_titlescreen[];
 
 extern const unsigned char level2_background_colliders [];
 extern const unsigned char level2_tiles[];
-extern const short level2_ntiles;
+extern const unsigned char level2_ntiles;
 extern const unsigned char level2_map[];
 extern const unsigned char level2_titlescreen[];
 
 extern const unsigned char level3_background_colliders [];
 extern const unsigned char level3_tiles[];
-extern const short level3_ntiles;
+extern const unsigned char level3_ntiles;
 extern const unsigned char level3_map[];
 extern const unsigned char level3_titlescreen[];
 
 extern const unsigned char level4_background_colliders [];
 extern const unsigned char level4_tiles[];
-extern const short level4_ntiles;
+extern const unsigned char level4_ntiles;
 extern const unsigned char level4_map[];
 extern const unsigned char level4_titlescreen[];
 
@@ -59,20 +59,20 @@ struct LevelData{
   unsigned char * tiles;
   unsigned char * map;
   unsigned char * background_colliders;
-  short ntiles;
-  short head_startx;
-  short head_starty;
+  unsigned char ntiles;
+  unsigned char head_startx;
+  unsigned char head_starty;
   unsigned char head_dir;
-  short food_startx;
-  short food_starty;
-  short left_boundary;
-  short right_boundary;
-  short top_boundary;
-  short bottom_boundary;
+  unsigned char food_startx;
+  unsigned char food_starty;
+  unsigned char left_boundary;
+  unsigned char right_boundary;
+  unsigned char top_boundary;
+  unsigned char bottom_boundary;
   unsigned char next_level_len;
-  short start_speed;
+  unsigned char start_speed;
   unsigned char speedup;
-  short speed_increase_len;
+  unsigned char speed_increase_len;
   unsigned char* titlescreen;
-  short food_timer;
+  char food_timer;
 };
