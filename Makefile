@@ -17,4 +17,4 @@ $(BINS): $(OBJS)
 	$(CC) $(LCCFLAGS) -o $(BUILDDIR)/snake.gb $(OBJS) 
 
 clean:
-	rm -f ../build/*
+	rm -f build/*

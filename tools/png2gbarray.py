@@ -84,7 +84,7 @@ def get_sprite_array(im, array_name, gb_code, debug=False):
     ntiles = int(im.size/(8*8))  # Total number of 8x8 tiles = npixels/64
     stride = int(im.shape[1]/8)
 
-    c_array = f"unsigned char {array_name}_data[] = \n"
+    c_array = f"const unsigned char {array_name}_data[] = \n"
     c_array += "{\n"
     for i in range(ntiles):
         c_array += "  "
@@ -101,7 +101,7 @@ def get_sprite_array(im, array_name, gb_code, debug=False):
 
     return c_array
 
-def get_background_data_and_map(im, name, gb_code, offset=37, debug=False):
+def get_background_data_and_map(im, name, gb_code, offset=0, debug=False):
     """
     Split the image into 8x8 tiles.
 
@@ -176,8 +176,8 @@ def get_background_data_and_map(im, name, gb_code, offset=37, debug=False):
         print(tile_data_array)
 
     tilemap_array = f"/*\nTile map size: {stride}x{int(ntiles/stride)}\n*/\n\n"
-    tilemap_array += f"short {filename}_ntiles = {len(unique_tiles)};\n"
-    tilemap_array += f"unsigned char {filename}_map[] = \n"
+    tilemap_array += f"const short {filename}_ntiles = {len(unique_tiles)};\n"
+    tilemap_array += f"const unsigned char {filename}_map[] = \n"
     tilemap_array += "{"
     for i in range(ntiles):
         if i % 20 == 0:
@@ -224,9 +224,9 @@ def get_background_data_and_map(im, name, gb_code, offset=37, debug=False):
 # fn_path = "../assets/food-spritesheet.png"
 # fn_path = "../assets/Background.png"
 # fn_path = "../assets/progressbar_tiles.png"
-# fn_path = "../assets/Level1.png"
-# fn_path = "../assets/Level2.png"
-# fn_path = "../assets/Level3.png"
+fn_path = "../assets/Level1.png"
+fn_path = "../assets/Level2.png"
+fn_path = "../assets/Level3.png"
 fn_path = "../assets/Level4.png"
 
 filename = os.path.splitext(os.path.split(fn_path)[-1])[0].lower()

@@ -28,6 +28,7 @@
 // #include "level4_colliders.h"
 
 #define SNAKE_MAX_SIZE 40
+#define FONT_TILE_OFFSET 37
 
 // uint8_t SCREEN_LEFT = 40;
 // uint8_t SCREEN_WIDTH = 80;
@@ -412,9 +413,9 @@ void placefood(uint8_t spriteid, uint8_t x, uint8_t y, unsigned char *map, unsig
   y_tile = (y-16) / 8;
   tileind = y_tile*stride + x_tile;
 
-  map[tileind] = food_tilemap_offset + spriteid;
+  map[tileind] = food_tilemap_offset + spriteid - FONT_TILE_OFFSET;
   background_colliders[tileind] = 2;
-  set_bkg_tiles(0, 0, 20, 18, map);
+  set_bkg_based_tiles(0, 0, 20, 18, map, FONT_TILE_OFFSET);
 }
 
 void replacefood(uint8_t spriteid, uint8_t old_x, uint8_t old_y, uint8_t x, uint8_t y, unsigned char *map, unsigned char *background_colliders, uint8_t food_tilemap_offset){
@@ -428,7 +429,7 @@ void replacefood(uint8_t spriteid, uint8_t old_x, uint8_t old_y, uint8_t x, uint
   y_tile = (y-16) / 8;
   tileind = y_tile*stride + x_tile;
 
-  map[tileind] = food_tilemap_offset + spriteid;
+  map[tileind] = food_tilemap_offset + spriteid - FONT_TILE_OFFSET;
   background_colliders[tileind] = 2;
   
   // Old location
@@ -436,11 +437,11 @@ void replacefood(uint8_t spriteid, uint8_t old_x, uint8_t old_y, uint8_t x, uint
   y_tile = (old_y-16) / 8;
   tileind = y_tile*stride + x_tile;
 
-  map[tileind] = 0;
+  map[tileind] = 256 - FONT_TILE_OFFSET;  // When adding FONT_TILE_OFFSET later, this should overflow to 0
   background_colliders[tileind] = 0;
   
   // Update map
-  set_bkg_tiles(0, 0, 20, 18, map);
+  set_bkg_based_tiles(0, 0, 20, 18, map, FONT_TILE_OFFSET);
 }
 
 void removefood(uint8_t x, uint8_t y, unsigned char *map, unsigned char *background_colliders){
@@ -453,9 +454,9 @@ void removefood(uint8_t x, uint8_t y, unsigned char *map, unsigned char *backgro
   y_tile = (y-16) / 8;
   tileind = y_tile*stride + x_tile;
 
-  map[tileind] = 0;
+  map[tileind] = 256 - FONT_TILE_OFFSET;  // When adding FONT_TILE_OFFSET later, this should overflow to 0
   background_colliders[tileind] = 0;
-  set_bkg_tiles(0, 0, 20, 18, map);
+  set_bkg_based_tiles(0, 0, 20, 18, map, FONT_TILE_OFFSET);
 }
 
 void movefood(struct Sprite* food, struct SnakePart* head, unsigned char* bkg_colliders, unsigned char* map, short lbound, short rbound, short tbound, short bbound, uint8_t* debug_tiles, unsigned char key, uint8_t food_tilemap_offset, uint8_t food_timer){
@@ -666,7 +667,6 @@ char get_input(uint8_t *input, uint8_t *old_input, uint8_t *move_dir_buff, char 
 void main(void){
   struct SnakePart* tmphead;
   font_t min_font;
-  uint8_t font_tilemap_offset = 37;
   uint8_t lives_tilemap_offset;
   uint8_t progressbar_tilemap_offset;
   uint8_t food_tilemap_offset;
@@ -871,15 +871,15 @@ void main(void){
       }
 
       /* Load background */
-      lives_tilemap_offset = font_tilemap_offset + level_data[current_level].ntiles;
+      lives_tilemap_offset = FONT_TILE_OFFSET + level_data[current_level].ntiles;
       progressbar_tilemap_offset = lives_tilemap_offset + 1;
       food_tilemap_offset = progressbar_tilemap_offset + 7;
-      set_bkg_data(font_tilemap_offset, level_data[current_level].ntiles, level_data[current_level].tiles);
+      set_bkg_data(FONT_TILE_OFFSET, level_data[current_level].ntiles, level_data[current_level].tiles);
       set_bkg_data(lives_tilemap_offset, 1, snake_spritesheet_data);
       set_bkg_data(progressbar_tilemap_offset, 7, progressbar_tiles_tiles);
       set_bkg_data(food_tilemap_offset, 4, food_spritesheet_tiles);
 
-      lives_tiles[0] = font_tilemap_offset + level_data[current_level].ntiles;
+      lives_tiles[0] = FONT_TILE_OFFSET + level_data[current_level].ntiles;
       lives_tiles[1] = 0x22;
       lives_tiles[2] = 0x1 + lives;
       set_win_tiles(5, 0, 3, 1, lives_tiles);
@@ -893,7 +893,7 @@ void main(void){
       set_win_tiles(5, 1, 11, 1, progressbar_tiles);
 
       /* Main code */
-      set_bkg_tiles(0, 0, 20, 18, current_map);
+      set_bkg_based_tiles(0, 0, 20, 18, current_map, FONT_TILE_OFFSET);
 
       // fadeout();
       SHOW_SPRITES;
@@ -1278,7 +1278,7 @@ void main(void){
         move_dir_buff[move_dir_buff_ind] = J_UP;
         // lives_tiles[lives] = 0x0;
         // set_win_tiles(16, 0, 3, 1, lives_tiles);
-        lives_tiles[0] = font_tilemap_offset + level_data[current_level].ntiles;
+        lives_tiles[0] = FONT_TILE_OFFSET + level_data[current_level].ntiles;
         lives_tiles[2] = 0x1 + lives;
         set_win_tiles(5, 3, 2, 1, lives_tiles);
     
