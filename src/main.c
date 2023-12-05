@@ -708,7 +708,7 @@ void main(void){
       .tiles = level1_tiles,
       .map = level1_map,
       .background_colliders = level1_background_colliders,
-      .ntiles = 16,  // level1_ntiles, Why did this stop working?
+      .ntiles = level1_ntiles, 
       .head_startx = 80,
       .head_starty = 80,
       .head_dir = 1, // Up
@@ -729,7 +729,7 @@ void main(void){
       .tiles = level2_tiles,
       .map = level2_map,
       .background_colliders = level2_background_colliders,
-      .ntiles = 33,  // level2_ntiles, Why did this stop working?
+      .ntiles = level2_ntiles,
       .head_startx = 104,
       .head_starty = 120,
       .head_dir = 1, // Up
@@ -750,7 +750,7 @@ void main(void){
       .tiles = level3_tiles,
       .map = level3_map,
       .background_colliders = level3_background_colliders,
-      .ntiles = 24,  // level3_ntiles, Why did this stop working?
+      .ntiles = level3_ntiles,
       .head_startx = 72,
       .head_starty = 80,
       .head_dir = 4, // Right
@@ -771,7 +771,7 @@ void main(void){
       .tiles = level4_tiles,
       .map = level4_map,
       .background_colliders = level4_background_colliders,
-      .ntiles = 13,  // level4_ntiles, Why did this stop working?
+      .ntiles = level4_ntiles,
       .head_startx = 104,
       .head_starty = 32,
       .head_dir = 2, // Down
@@ -853,7 +853,7 @@ void main(void){
       Show level title screen
     */
     fadeout();
-    SWITCH_ROM(5);
+    SWITCH_ROM(2);
     show_game_titlescreen(game_titlescreen);
     show_titlescreen(level_data[current_level].titlescreen);
 
@@ -861,7 +861,8 @@ void main(void){
 
     while (!game_over){
       /* Load Level */
-      SWITCH_ROM(current_level+1);
+      // SWITCH_ROM(current_level+1);
+      SWITCH_ROM(1);
 
       // Copy background map and background colliders to Bank0 RAM
       for (int16_t i = 0; i < 360; i++){
@@ -1259,7 +1260,7 @@ void main(void){
           lives++;
         }
         fadeout();
-        SWITCH_ROM(5);
+        SWITCH_ROM(2);
         show_titlescreen(level_data[current_level].titlescreen);
       }
 
@@ -1293,12 +1294,12 @@ void main(void){
 
     if (game_over) {
       fadeout();
-      SWITCH_ROM(5);
+      SWITCH_ROM(2);
       show_finalscreen(gameover_titlescreen, 0);
     }
     else if (stop_play == 3){
       fadeout();
-      SWITCH_ROM(5);
+      SWITCH_ROM(2);
       show_finalscreen(win_titlescreen, 1);
     }
     HIDE_BKG;
