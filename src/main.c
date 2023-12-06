@@ -6,39 +6,15 @@
 #include <rand.h>
 
 #include "Sprite.h"
-//#include "food_spritesheet_py.h"
 #include "food_spritesheet_tiles_py.h"
 #include "snake_spritesheet_py.h"
 #include "progressbar_tiles_tiles_py.h"
 #include "windowmap.h"
 
 #include "data.h"
-// #include "level_title_screens.h"
-// #include "level1_tiles_py.h"
-// #include "level1_map_py.h"
-// #include "level1_colliders.h"
-// #include "level2_tiles_py.h"
-// #include "level2_map_py.h"
-// #include "level2_colliders.h"
-// #include "level3_tiles_py.h"
-// #include "level3_map_py.h"
-// #include "level3_colliders.h"
-// #include "level4_tiles_py.h"
-// #include "level4_map_py.h"
-// #include "level4_colliders.h"
 
 #define SNAKE_MAX_SIZE 40
 #define FONT_TILE_OFFSET 37
-
-// uint8_t SCREEN_LEFT = 40;
-// uint8_t SCREEN_WIDTH = 80;
-// uint8_t SCREEN_TOP = 40;
-// uint8_t SCREEN_HEIGHT = 80;
-
-uint8_t SCREEN_LEFT = 0;
-uint8_t SCREEN_WIDTH = 160;
-uint8_t SCREEN_TOP = 8;
-uint8_t SCREEN_HEIGHT = 144;
 
 /*
 The snake sprite has5 8x8 tiles:
@@ -82,8 +58,6 @@ uint8_t LEVEL_STARTX = 80;
 uint8_t LEVEL_STARTY = 80;
 uint8_t LEVEL_FOOD_STARTX = 72;
 uint8_t LEVEL_FOOD_STARTY = 50;
-
-void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady);
 
 void wait(uint8_t n){
   // Interrupt-based delay.
@@ -212,18 +186,21 @@ void show_titlescreen(unsigned char* titlescreen){
   HIDE_WIN;
   
   set_bkg_tiles(0, 0, 20, 18, titlescreen);
+  move_bkg(0,0);
 
   SHOW_BKG;
-  
-  // Scroll background so it looks it comes down from the top of the screen
-  move_bkg(0, 72);
-  fadein();
 
-  play_leveltitle_sound();
-  for (int i = 72; i >= 0; i--){
-    move_bkg(0, i);
-    wait_vbl_done();
-  }
+  fadein();
+  
+  // // Scroll background so it looks it comes down from the top of the screen
+  // move_bkg(0, 72);
+  // fadein();
+
+  // play_leveltitle_sound();
+  // for (int i = 72; i >= 0; i--){
+    // move_bkg(0, i);
+    // wait_vbl_done();
+  // }
 
   waitpad(J_START | J_A | J_B);
   waitpadup();
@@ -333,6 +310,34 @@ UBYTE background_collision(uint8_t x, uint8_t y, char* bkg_colliders, uint8_t* d
   // return collision;
 }
 
+void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady){
+  struct SnakePart* tail;
+  uint8_t newx;
+  uint8_t newy;
+
+  //Process tail
+  tail = head->next;
+
+  while (1){
+    newx = headx;
+    newy = heady;
+    headx = tail->sprite.x;
+    heady = tail->sprite.y;
+    tail->sprite.x = newx;
+    tail->sprite.y = newy;
+
+    move_sprite(tail->sprite.spriteid, newx, newy);
+    
+    if (tail->next == NULL){
+      break;
+    }
+    else{
+      head = tail;
+      tail = head->next;
+    }
+  }
+}
+
 void move_snake(struct SnakePart* head, int8_t x, int8_t y){
   /*
   For the snake movement, the head moves in the direction of the joypad 
@@ -373,34 +378,6 @@ void move_snake(struct SnakePart* head, int8_t x, int8_t y){
   head->sprite.y = newy;
   move_sprite(head->sprite.spriteid, head->sprite.x, head->sprite.y);
   move_tail(head, headx, heady);
-}
-
-void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady){
-  struct SnakePart* tail;
-  uint8_t newx;
-  uint8_t newy;
-
-  //Process tail
-  tail = head->next;
-
-  while (1){
-    newx = headx;
-    newy = heady;
-    headx = tail->sprite.x;
-    heady = tail->sprite.y;
-    tail->sprite.x = newx;
-    tail->sprite.y = newy;
-
-    move_sprite(tail->sprite.spriteid, newx, newy);
-    
-    if (tail->next == NULL){
-      break;
-    }
-    else{
-      head = tail;
-      tail = head->next;
-    }
-  }
 }
 
 void placefood(uint8_t spriteid, uint8_t x, uint8_t y, unsigned char *map, unsigned char *background_colliders, uint8_t food_tilemap_offset){
@@ -664,6 +641,44 @@ char get_input(uint8_t *input, uint8_t *old_input, uint8_t *move_dir_buff, char 
   return valid_input;
 }
 
+void level1_2_animation(unsigned char * lvl2_tiles, unsigned char * lvl2_map, unsigned char tile_ind, unsigned char ntiles){
+  HIDE_SPRITES;
+
+  fadein();
+  set_bkg_data(tile_ind, ntiles, lvl2_tiles);
+  set_bkg_based_tiles(0, 18, 20, 14, &lvl2_map[4*20], tile_ind);
+
+  for (char i=0; i < 14; i++){
+    scroll_bkg(0, -8);
+    wait(20);
+
+  }
+  set_bkg_based_tiles(0, 14, 20, 4, lvl2_map, tile_ind);
+  for (char i=0; i < 4; i++){
+    scroll_bkg(0, -8);
+    wait(20);
+  }
+}
+
+void level3_4_animation(unsigned char * lvl4_tiles, unsigned char * lvl4_map, unsigned char tile_ind, unsigned char ntiles){
+  HIDE_SPRITES;
+
+  fadein();
+  set_bkg_data(tile_ind, ntiles, lvl4_tiles);
+  set_bkg_based_tiles(0, 18, 20, 14, lvl4_map, tile_ind);
+
+  for (char i=0; i < 14; i++){
+    scroll_bkg(0, 8);
+    wait(20);
+
+  }
+  set_bkg_based_tiles(0, 0, 20, 4, &lvl4_map[14*20], tile_ind);
+  for (char i=0; i < 4; i++){
+    scroll_bkg(0, 8);
+    wait(20);
+  }
+}
+
 void main(void){
   struct SnakePart* tmphead;
   font_t min_font;
@@ -880,6 +895,7 @@ void main(void){
       set_bkg_data(food_tilemap_offset, 4, food_spritesheet_tiles);
 
       set_bkg_based_tiles(0, 0, 20, 18, current_map, FONT_TILE_OFFSET);
+      move_bkg(0,0);
 
       lives_tiles[0] = FONT_TILE_OFFSET + level_data[current_level].ntiles;
       lives_tiles[1] = 0x22;
@@ -893,12 +909,6 @@ void main(void){
       }
       progressbar_tiles[10] = progressbar_tilemap_offset + 3; // right edge of bar
       set_win_tiles(5, 1, 11, 1, progressbar_tiles);
-
-      // fadeout();
-      SHOW_SPRITES;
-      SHOW_BKG;
-      SHOW_WIN;
-      // fadein();
 
       next_snaketail_sprite_id = 0;
       snake_tail_ind = 0;
@@ -1000,6 +1010,10 @@ void main(void){
       speed = level_data[current_level].start_speed;
       speed_factor = 0;
       old_speed_factor = 0;
+
+      SHOW_SPRITES;
+      SHOW_BKG;
+      SHOW_WIN;
 
       while(!stop_play){
         new_input = 0;
@@ -1259,7 +1273,22 @@ void main(void){
           // and the player has less than 3 lives.
           lives++;
         }
+
+        /* Reset all variables */
+        tmphead = snake_tail;
+        while(tmphead != NULL) {
+          move_sprite(tmphead->sprite.spriteid, 0, 0);
+          tmphead = tmphead->next;
+        }
+
         fadeout();
+        removefood(food_sprite.x, food_sprite.y, current_map, current_bkg_colliders);
+        if (current_level == 1) {
+          level1_2_animation(level_data[current_level].tiles, level_data[current_level].map, food_tilemap_offset + 4, level_data[current_level].ntiles);
+        }
+        else if (current_level == 3){
+          level3_4_animation(level_data[current_level].tiles, level_data[current_level].map, food_tilemap_offset + 4, level_data[current_level].ntiles);
+        }
         SWITCH_ROM(2);
         show_titlescreen(level_data[current_level].titlescreen);
       }
