@@ -68,6 +68,60 @@ void wait(uint8_t n){
   }
 }
 
+void play_eating_sound(void){
+    NR10_REG = 0x37;
+    NR11_REG = 0X85;
+    NR12_REG = 0X43;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_leveltitle_sound(void){
+    NR10_REG = 0x75;
+    NR11_REG = 0X86;
+    NR12_REG = 0X87;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_key_sound(void){
+    NR10_REG = 0x35;
+    NR11_REG = 0X85;
+    NR12_REG = 0X47;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_gameover_sound(void){
+    NR10_REG = 0x1C;
+    NR11_REG = 0X89;
+    NR12_REG = 0XF7;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_wining_sound(void){
+    NR10_REG = 0x37;
+    NR11_REG = 0X85;
+    NR12_REG = 0X1F;
+    NR13_REG = 0X75;
+    NR14_REG = 0X86;
+}
+
+void play_dying_sound(void){
+    NR41_REG = 0X00;
+    NR42_REG = 0XFB;
+    NR43_REG = 0X80;
+    NR44_REG = 0XC0;
+}
+
+void play_moving_sound(void){
+    NR41_REG = 0X3A;
+    NR42_REG = 0XA1;
+    NR43_REG = 0X00;
+    NR44_REG = 0XC0;
+}
+
 void fadeout(void){
   uint8_t i;
 
@@ -284,7 +338,6 @@ UBYTE background_collision(uint8_t x, uint8_t y, char* bkg_colliders, uint8_t* d
     The sprite x coordinate in OAM is 8 pixels higher than bkg_colliders coordinates.
     The sprite y coordinate in OAM is 16 pixels higher than the bkg_colliders coordinates.
     */
-  uint8_t collision;
   uint16_t tileind;
   uint8_t stride = 20;
 
@@ -300,14 +353,6 @@ UBYTE background_collision(uint8_t x, uint8_t y, char* bkg_colliders, uint8_t* d
 
   return bkg_colliders[tileind];
 
-  // if (bkg_colliders[tileind] == 1) {
-    // collision = 1;
-  // }
-  // else{
-    // collision = 0;
-  // }
-
-  // return collision;
 }
 
 void move_tail(struct SnakePart* head, uint8_t headx, uint8_t heady){
@@ -512,60 +557,6 @@ void score2tile(uint8_t score, uint8_t* score_tiles){
       score_tiles[1] = 0x01;
       score_tiles[2] = 0x01;
     }
-}
-
-void play_eating_sound(void){
-    NR10_REG = 0x37;
-    NR11_REG = 0X85;
-    NR12_REG = 0X43;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
-}
-
-void play_leveltitle_sound(void){
-    NR10_REG = 0x75;
-    NR11_REG = 0X86;
-    NR12_REG = 0X87;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
-}
-
-void play_key_sound(void){
-    NR10_REG = 0x35;
-    NR11_REG = 0X85;
-    NR12_REG = 0X47;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
-}
-
-void play_gameover_sound(void){
-    NR10_REG = 0x1C;
-    NR11_REG = 0X89;
-    NR12_REG = 0XF7;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
-}
-
-void play_wining_sound(void){
-    NR10_REG = 0x37;
-    NR11_REG = 0X85;
-    NR12_REG = 0X1F;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
-}
-
-void play_dying_sound(void){
-    NR41_REG = 0X00;
-    NR42_REG = 0XFB;
-    NR43_REG = 0X80;
-    NR44_REG = 0XC0;
-}
-
-void play_moving_sound(void){
-    NR41_REG = 0X3A;
-    NR42_REG = 0XA1;
-    NR43_REG = 0X00;
-    NR44_REG = 0XC0;
 }
 
 char get_input(uint8_t *input, uint8_t *old_input, uint8_t *move_dir_buff, char *start_ind, uint8_t *old_direction){
