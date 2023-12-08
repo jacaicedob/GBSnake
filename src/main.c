@@ -890,6 +890,7 @@ void main(void){
 
   uint16_t music_ind;
   uint8_t frame_counter;
+  uint8_t old_bank;
 
   DISPLAY_ON;
 
@@ -1286,18 +1287,21 @@ void main(void){
         // old_direction = move_direction;
         // start_ind = move_dir_buff_ind;
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
-          // if (frequencies[ch1_main_music[music_ind]] != 65535){ 
-            // play_music(&music_ind, &frame_counter, ch1_main_music, ch2_main_music);
-            // frame_counter++;
-            // if (frame_counter == 15){
-              // frame_counter = 0;
-              // music_ind++;
-            // }
-          // }
-          // else {
-            // music_ind = 0;
-            // frame_counter = 0;
-          // }
+          old_bank = _current_bank;
+          SWITCH_ROM(2);
+          if (frequencies[ch1_main_music[music_ind]] != 65535){ 
+            play_music(&music_ind, &frame_counter, ch1_main_music, ch2_main_music);
+            frame_counter++;
+            if (frame_counter == 15){
+              frame_counter = 0;
+              music_ind++;
+            }
+          }
+          else {
+            music_ind = 0;
+            frame_counter = 0;
+          }
+          SWITCH_ROM(old_bank);
 
           new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
 
