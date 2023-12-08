@@ -122,6 +122,23 @@ void play_moving_sound(void){
     NR44_REG = 0XC0;
 }
 
+void play_music(uint8_t *music_ind, uint8_t *frame_counter, uint8_t *ch1_music, uint8_t *ch2_music){
+  if ((frequencies[ch1_music[*music_ind]] != 0) && (*frame_counter == 0)) {
+    NR10_REG = 0x0;
+    NR11_REG = 0x41;
+    NR12_REG = 0xF7;
+    NR13_REG = (frequencies[ch1_music[*music_ind]] & 0xFF);
+    NR14_REG = (frequencies[ch1_music[*music_ind]] >> 8) | (1 << 7); // Upper nibble
+  }
+    
+  if ((frequencies[ch2_music[*music_ind]] != 0) && (*frame_counter == 0)) {
+    NR21_REG = 0x40;
+    NR22_REG = 0xA4;
+    NR23_REG = (frequencies[ch2_music[*music_ind]] & 0xFF);
+    NR24_REG = (frequencies[ch2_music[*music_ind]] >> 8) | (1 << 7); // Upper nibble
+  }
+}
+
 void fadeout(void){
   uint8_t i;
 
@@ -213,6 +230,10 @@ void show_finalscreen(unsigned char* finalscreen, char type){
 }
 
 void show_game_titlescreen(unsigned char* titlescreen){
+  uint16_t music_ind = 0;
+  uint8_t frame_counter = 0;
+  uint8_t input;
+
   HIDE_SPRITES;
   HIDE_WIN;
   
@@ -224,15 +245,53 @@ void show_game_titlescreen(unsigned char* titlescreen){
   // move_bkg(0, 72);
   fadein();
 
-  // play_title_music();
-  // for (int i = 72; i >= 0; i--){
-    // move_bkg(0, i);
-    // wait_vbl_done();
-  // }
+  SWITCH_ROM(2);
+  while (frequencies[ch1_intro_music[music_ind]] != 65535){
+    play_music(&music_ind, &frame_counter, ch1_intro_music, ch2_intro_music);
+    input = joypad();
+    input = joypad();
+    input = joypad();
 
-  waitpad(J_START);
-  waitpadup();
-  HIDE_BKG;
+    if (input & J_START) {
+      HIDE_BKG;
+      wait_vbl_done();
+      return;
+    }
+    frame_counter++;
+    if (frame_counter == 15){
+      frame_counter = 0;
+      music_ind++;
+    }
+    wait_vbl_done();
+  }
+
+  music_ind = 0;
+  frame_counter = 0;
+
+  while (1){
+    if (frequencies[ch1_main_music[music_ind]] != 65535){ 
+      play_music(&music_ind, &frame_counter, ch1_main_music, ch2_main_music);
+      input = joypad();
+      input = joypad();
+      input = joypad();
+
+      if (input & J_START) {
+        HIDE_BKG;
+        wait_vbl_done();
+        return;
+      }
+      frame_counter++;
+      if (frame_counter == 15){
+        frame_counter = 0;
+        music_ind++;
+      }
+      wait_vbl_done();
+    }
+    else {
+      music_ind = 0;
+      frame_counter = 0;
+    }
+  }
 }
 
 void show_titlescreen(unsigned char* titlescreen){
@@ -709,7 +768,7 @@ void main(void){
   uint8_t progressbar_tiles[11];
   uint8_t lives;
   
-  const struct LevelData level_data[] = {
+  struct LevelData level_data[] = {
     {
       .tiles = level1_tiles,
       .map = level1_map,
@@ -828,6 +887,9 @@ void main(void){
   NR52_REG = 0x80;  // Enable sound chip
   NR50_REG = 0x77;  // Max volume on both speakers
   NR51_REG = 0xBB;  // Enable CH1,2,4 on both speakers
+
+  uint16_t music_ind;
+  uint8_t frame_counter;
 
   DISPLAY_ON;
 
@@ -1006,6 +1068,8 @@ void main(void){
       SHOW_BKG;
       SHOW_WIN;
 
+      music_ind = 0;
+      frame_counter = 0;
       while(!stop_play){
         new_input = 0;
         move_direction = move_dir_buff[move_dir_buff_ind];
@@ -1222,6 +1286,19 @@ void main(void){
         // old_direction = move_direction;
         // start_ind = move_dir_buff_ind;
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
+          // if (frequencies[ch1_main_music[music_ind]] != 65535){ 
+            // play_music(&music_ind, &frame_counter, ch1_main_music, ch2_main_music);
+            // frame_counter++;
+            // if (frame_counter == 15){
+              // frame_counter = 0;
+              // music_ind++;
+            // }
+          // }
+          // else {
+            // music_ind = 0;
+            // frame_counter = 0;
+          // }
+
           new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
 
           if (food_sprite.timer == 0) {

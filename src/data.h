@@ -29,6 +29,12 @@ extern const unsigned char gameover_titlescreen[];
 extern const unsigned char restart_titlescreen[];
 extern const unsigned char game_titlescreen[];
 
+extern const uint16_t frequencies[];
+extern const uint8_t ch1_intro_music[];
+extern const uint8_t ch2_intro_music[];
+extern const uint8_t ch1_main_music[];
+extern const uint8_t ch2_main_music[];
+
 BANKREF_EXTERN(level1_background_colliders)
 BANKREF_EXTERN(level1_tiles)
 BANKREF_EXTERN(level1_ntiles)
@@ -54,6 +60,12 @@ BANKREF_EXTERN(win_titlescreen)
 BANKREF_EXTERN(gameover_titlescreen)
 BANKREF_EXTERN(restart_titlescreen)
 BANKREF_EXTERN(game_titlescreen)
+
+BANKREF_EXTERN(frequencies)
+BANKREF_EXTERN(ch1_intro_music)
+BANKREF_EXTERN(ch2_intro_music)
+BANKREF_EXTERN(ch1_main_music)
+BANKREF_EXTERN(ch2_main_music)
 
 struct LevelData{
   unsigned char * tiles;
