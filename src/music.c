@@ -6,7 +6,7 @@
 
 // BANKREF(notes)
 BANKREF(frequencies)
-BANKREF(ch1_intro_music)
-BANKREF(ch2_intro_music)
-BANKREF(ch1_main_music)
-BANKREF(ch2_main_music)
+BANKREF(bass_intro_music)
+BANKREF(lead_intro_music)
+BANKREF(bass_main_music)
+BANKREF(lead_main_music)

@@ -18,21 +18,21 @@ const uint16_t frequencies[] = {
   0, 65535
 };
 
-const uint8_t ch1_intro_music[] = {
+const uint8_t bass_intro_music[] = {
       // Intro
       D2, D3, D2, D3, D2, D3, D2, D3,  // 0x00 - 0x0F
       D2, D3, D2, D3, D2, D3, D2, D3,  // 0x10 - 0x1F
       END
 };
 
-const uint8_t ch2_intro_music[] = {
+const uint8_t lead_intro_music[] = {
       // Intro
       SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE,  // 0x00 - 0x0F
       SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE,  // 0x10 - 0x1F
       END
 };
 
-const uint8_t ch1_main_music[] = {
+const uint8_t bass_main_music[] = {
       // Main Theme
       D2, D3, D2, D3, D2, D3, D2, D3,  // 0x00 - 0x0F
       D2, D3, D2, D3, D2, D3, D2, D3,  // 0x10 - 0x1F
@@ -60,7 +60,7 @@ const uint8_t ch1_main_music[] = {
       END
 };
 
-const uint8_t ch2_main_music[] = {
+const uint8_t lead_main_music[] = {
       // Main Theme
       A4, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, G4,  // 0x00 - 0x0F
       Fd4, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE, SILENCE,  // 0x10 - 0x1F

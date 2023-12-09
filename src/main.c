@@ -69,74 +69,152 @@ void wait(uint8_t n){
 }
 
 void play_eating_sound(void){
-    NR10_REG = 0x37;
-    NR11_REG = 0X85;
-    NR12_REG = 0X43;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
+  // Stop Channel before playing FX
+  NR12_REG = 0x0;
+  NR14_REG = 0x0;
+
+  // Play FX
+  NR10_REG = 0x37;
+  NR11_REG = 0X85;
+  NR12_REG = 0XF1;
+  NR13_REG = 0X75;
+  NR14_REG = 0X86;
 }
 
 void play_leveltitle_sound(void){
-    NR10_REG = 0x75;
-    NR11_REG = 0X86;
-    NR12_REG = 0X87;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
+  // Stop Channel before playing FX
+  NR12_REG = 0x0;
+  NR14_REG = 0x0;
+
+  // Play FX
+  NR10_REG = 0x75;
+  NR11_REG = 0X86;
+  NR12_REG = 0XF7;
+  NR13_REG = 0X75;
+  NR14_REG = 0X86;
 }
 
 void play_key_sound(void){
-    NR10_REG = 0x35;
-    NR11_REG = 0X85;
-    NR12_REG = 0X47;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
+  // Stop Channel before playing FX
+  NR12_REG = 0x0;
+  NR14_REG = 0x0;
+
+  // Play FX
+  NR10_REG = 0x35;
+  NR11_REG = 0X85;
+  NR12_REG = 0XF7;
+  NR13_REG = 0X75;
+  NR14_REG = 0X86;
 }
 
 void play_gameover_sound(void){
-    NR10_REG = 0x1C;
-    NR11_REG = 0X89;
-    NR12_REG = 0XF7;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
+  // Stop Channel before playing FX
+  NR12_REG = 0x0;
+  NR14_REG = 0x0;
+
+  // Play FX
+  NR10_REG = 0x1C;
+  NR11_REG = 0X89;
+  NR12_REG = 0XF7;
+  NR13_REG = 0X75;
+  NR14_REG = 0X86;
 }
 
 void play_wining_sound(void){
-    NR10_REG = 0x37;
-    NR11_REG = 0X85;
-    NR12_REG = 0X1F;
-    NR13_REG = 0X75;
-    NR14_REG = 0X86;
+  // Stop Channel before playing FX
+  NR12_REG = 0x0;
+  NR14_REG = 0x0;
+
+  // Play FX
+  NR10_REG = 0x37;
+  NR11_REG = 0X85;
+  NR12_REG = 0X5F;
+  NR13_REG = 0X75;
+  NR14_REG = 0X86;
 }
 
 void play_dying_sound(void){
-    NR41_REG = 0X00;
-    NR42_REG = 0XFB;
-    NR43_REG = 0X80;
-    NR44_REG = 0XC0;
+  // Stop Channel before playing FX
+  NR42_REG = 0x0;
+  NR44_REG = 0x0;
+
+  // Play FX
+  NR41_REG = 0X00;
+  NR42_REG = 0XFB;
+  NR43_REG = 0X80;
+  NR44_REG = 0XC0;
 }
 
-void play_moving_sound(void){
-    NR41_REG = 0X3A;
-    NR42_REG = 0XA1;
-    NR43_REG = 0X00;
-    NR44_REG = 0XC0;
+// void play_moving_sound(void){
+  // // Stop Channel before playing FX
+  // NR42_REG = 0x0;
+  // NR44_REG = 0x0;
+
+  // // Play FX
+  // NR41_REG = 0X3A;
+  // NR42_REG = 0XA1;
+  // NR43_REG = 0X00;
+  // NR44_REG = 0XC0;
+// }
+
+uint8_t calculate_tempo(uint8_t snake_len){
+  /* 
+    After some experimentation, i realized that using some form 
+    of equation to calculate the tempo as a ratio of the speed and the
+    desired bpm was causing the music to get too fast too quickly and 
+    also getting out of sync with the snake movement sounds.
+
+    I decided to use set values and using the tracker, i found that
+    if each eighth note is played every 10-15 frames, the music is not
+    too fast. 
+  */
+  if (snake_len < 8){
+    return 15;
+  }
+  else if (snake_len < 16){
+    return 14;
+  }
+  else if (snake_len < 24){
+    return 13;
+  }
+  else if (snake_len < 32){
+    return 12;
+  }
+  else if (snake_len < 36){
+    return 11;
+  }
+  else {
+    return 10;
+  }
 }
 
-void play_music(uint8_t *music_ind, uint8_t *frame_counter, uint8_t *ch1_music, uint8_t *ch2_music){
-  if ((frequencies[ch1_music[*music_ind]] != 0) && (*frame_counter == 0)) {
+void play_music(uint8_t *music_ind, uint8_t *frame_counter, uint8_t *bass_music, uint8_t *lead_music){
+  // CH1 plays lead, CH2 plays bass
+  if ((frequencies[lead_music[*music_ind]] != 0) && (*frame_counter == 0)) {
     NR10_REG = 0x0;
     NR11_REG = 0x41;
-    NR12_REG = 0xF7;
-    NR13_REG = (frequencies[ch1_music[*music_ind]] & 0xFF);
-    NR14_REG = (frequencies[ch1_music[*music_ind]] >> 8) | (1 << 7); // Upper nibble
+    NR12_REG = 0xA7;
+    NR13_REG = (frequencies[lead_music[*music_ind]] & 0xFF);
+    NR14_REG = (frequencies[lead_music[*music_ind]] >> 8) | (1 << 7); // Upper nibble
   }
     
-  if ((frequencies[ch2_music[*music_ind]] != 0) && (*frame_counter == 0)) {
+  if ((frequencies[bass_music[*music_ind]] != 0) && (*frame_counter == 0)) {
     NR21_REG = 0x40;
-    NR22_REG = 0xA4;
-    NR23_REG = (frequencies[ch2_music[*music_ind]] & 0xFF);
-    NR24_REG = (frequencies[ch2_music[*music_ind]] >> 8) | (1 << 7); // Upper nibble
+    NR22_REG = 0x94;
+    NR23_REG = (frequencies[bass_music[*music_ind]] & 0xFF);
+    NR24_REG = (frequencies[bass_music[*music_ind]] >> 8) | (1 << 7); // Upper nibble
   }
+}
+
+void stop_music(void){
+  NR12_REG = 0x0;
+  NR14_REG = 0x0;
+
+  NR22_REG = 0x0;
+  NR24_REG = 0x0;
+
+  NR42_REG = 0x0;
+  NR44_REG = 0x0;
 }
 
 void fadeout(void){
@@ -230,6 +308,7 @@ void show_finalscreen(unsigned char* finalscreen, char type){
 }
 
 void show_game_titlescreen(unsigned char* titlescreen){
+  // This plays the music at 120 bpm (change notes every 15 frames)
   uint16_t music_ind = 0;
   uint8_t frame_counter = 0;
   uint8_t input;
@@ -246,14 +325,15 @@ void show_game_titlescreen(unsigned char* titlescreen){
   fadein();
 
   SWITCH_ROM(2);
-  while (frequencies[ch1_intro_music[music_ind]] != 65535){
-    play_music(&music_ind, &frame_counter, ch1_intro_music, ch2_intro_music);
+  while (frequencies[bass_intro_music[music_ind]] != 65535){
+    play_music(&music_ind, &frame_counter, bass_intro_music, lead_intro_music);
     input = joypad();
     input = joypad();
     input = joypad();
 
     if (input & J_START) {
       HIDE_BKG;
+      stop_music();
       wait_vbl_done();
       return;
     }
@@ -269,14 +349,15 @@ void show_game_titlescreen(unsigned char* titlescreen){
   frame_counter = 0;
 
   while (1){
-    if (frequencies[ch1_main_music[music_ind]] != 65535){ 
-      play_music(&music_ind, &frame_counter, ch1_main_music, ch2_main_music);
+    if (frequencies[bass_main_music[music_ind]] != 65535){ 
+      play_music(&music_ind, &frame_counter, bass_main_music, lead_main_music);
       input = joypad();
       input = joypad();
       input = joypad();
 
       if (input & J_START) {
         HIDE_BKG;
+        stop_music();
         wait_vbl_done();
         return;
       }
@@ -317,6 +398,7 @@ void show_titlescreen(unsigned char* titlescreen){
 
   waitpad(J_START | J_A | J_B);
   waitpadup();
+  stop_music();
   HIDE_BKG;
 }
 
@@ -886,7 +968,7 @@ void main(void){
   // Turn on Sound
   NR52_REG = 0x80;  // Enable sound chip
   NR50_REG = 0x77;  // Max volume on both speakers
-  NR51_REG = 0xBB;  // Enable CH1,2,4 on both speakers
+  NR51_REG = 0xBB;  // Enable bass,2,4 on both speakers
 
   uint16_t music_ind;
   uint8_t frame_counter;
@@ -1146,7 +1228,7 @@ void main(void){
         }
         else {
           new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
-          play_moving_sound();
+          // play_moving_sound();
           move_snake(&snake_tail[0], dx, dy);
           if (background_collision(snake_tail[0].sprite.x, snake_tail[0].sprite.y, current_bkg_colliders, debug_tiles) == 2) {
             new_input |= get_input(&input, &old_input, move_dir_buff, &start_ind, &old_direction); 
@@ -1289,10 +1371,10 @@ void main(void){
         for (wait_loop_ind = 0; wait_loop_ind < speed; wait_loop_ind++){
           old_bank = _current_bank;
           SWITCH_ROM(2);
-          if (frequencies[ch1_main_music[music_ind]] != 65535){ 
-            play_music(&music_ind, &frame_counter, ch1_main_music, ch2_main_music);
+          if (frequencies[bass_main_music[music_ind]] != 65535){ 
+            play_music(&music_ind, &frame_counter, bass_main_music, lead_main_music);
             frame_counter++;
-            if (frame_counter == 15){
+            if (frame_counter == calculate_tempo(snake_tail_ind)){
               frame_counter = 0;
               music_ind++;
             }
