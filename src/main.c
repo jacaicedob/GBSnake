@@ -59,13 +59,16 @@ uint8_t LEVEL_STARTY = 80;
 uint8_t LEVEL_FOOD_STARTX = 72;
 uint8_t LEVEL_FOOD_STARTY = 50;
 
-void wait(uint8_t n){
+uint8_t wait(uint8_t n){
   // Interrupt-based delay.
   // Returns after n Vertical Blanking interrupts (screen refreshes)
-  uint8_t x;
-  for (x = 0; x < n; x++){
+  uint8_t input = 0;
+  for (uint8_t x = 0; x < n; x++){
+    input |= joypad();
     wait_vbl_done();
-  }
+  };
+
+  return input;
 }
 
 void play_eating_sound(void){
@@ -774,6 +777,7 @@ char get_input(uint8_t *input, uint8_t *old_input, uint8_t *move_dir_buff, char 
 }
 
 void level_animation_up(unsigned char * next_level_tiles, unsigned char * next_level_map, unsigned char tile_ind, unsigned char ntiles){
+  uint8_t input;
   HIDE_SPRITES;
 
   set_bkg_data(tile_ind, ntiles, next_level_tiles);
@@ -782,17 +786,24 @@ void level_animation_up(unsigned char * next_level_tiles, unsigned char * next_l
   for (char i=0; i < 14; i++){
     scroll_bkg(0, -8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
   set_bkg_based_tiles(0, 14, 20, 4, next_level_map, tile_ind);
   for (char i=0; i < 4; i++){
     scroll_bkg(0, -8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 }
 
 void level_animation_down(unsigned char * next_level_tiles, unsigned char * next_level_map, unsigned char tile_ind, unsigned char ntiles){
+  uint8_t input;
   HIDE_SPRITES;
 
   set_bkg_data(tile_ind, ntiles, next_level_tiles);
@@ -801,20 +812,27 @@ void level_animation_down(unsigned char * next_level_tiles, unsigned char * next
   for (char i=0; i < 14; i++){
     scroll_bkg(0, 8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 
   set_bkg_based_tiles(0, 0, 20, 4, &next_level_map[14*20], tile_ind);
   for (char i=0; i < 4; i++){
     scroll_bkg(0, 8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 }
 
 void level_animation_right(unsigned char * next_level_tiles, unsigned char * next_level_map, unsigned char tile_ind, unsigned char ntiles){
   unsigned char column_buffer[18];
   char row, col;
+  uint8_t input;
   
   HIDE_SPRITES;
   
@@ -839,13 +857,17 @@ void level_animation_right(unsigned char * next_level_tiles, unsigned char * nex
       }
       set_bkg_based_tiles(col, 0, 1, 18, column_buffer, tile_ind);
     }
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 }
 
 void level_animation_left(unsigned char * next_level_tiles, unsigned char * next_level_map, unsigned char tile_ind, unsigned char ntiles){
   unsigned char column_buffer[18];
   char row, col;
+  uint8_t input;
   
   HIDE_SPRITES;
   
@@ -863,7 +885,10 @@ void level_animation_left(unsigned char * next_level_tiles, unsigned char * next
   for (col = 0; col < 12; col++){
     play_moving_sound();
     scroll_bkg(-8, 0);
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 
   // Load the remaining 8 columns into the 12th column of VRAM
@@ -878,13 +903,17 @@ void level_animation_left(unsigned char * next_level_tiles, unsigned char * next
   for (col = 0; col < 8; col++){
     play_moving_sound();
     scroll_bkg(-8, 0);
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 }
 
 void world_pan(struct LevelData * level_data){
   char current_level;
   uint8_t offset;
+  uint8_t input;
 
   HIDE_SPRITES;
   HIDE_WIN;
@@ -906,13 +935,19 @@ void world_pan(struct LevelData * level_data){
   for (char i=0; i < 14; i++){
     scroll_bkg(0, -8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
   set_bkg_based_tiles(0, 14, 20, 4, level_data[current_level].map, offset);
   for (char i=0; i < 4; i++){
     scroll_bkg(0, -8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
   offset += level_data[current_level].ntiles;
 
@@ -935,7 +970,10 @@ void world_pan(struct LevelData * level_data){
   for (col = 0; col < 12; col++){
     play_moving_sound();
     scroll_bkg(-8, 0);
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 
   // Load the remaining 8 columns into the 12th column of VRAM
@@ -950,7 +988,10 @@ void world_pan(struct LevelData * level_data){
   for (col = 0; col < 8; col++){
     play_moving_sound();
     scroll_bkg(-8, 0);
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 
   offset += level_data[current_level].ntiles;
@@ -963,14 +1004,20 @@ void world_pan(struct LevelData * level_data){
   for (char i=0; i < 14; i++){
     scroll_bkg(0, 8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 
   set_bkg_based_tiles(12, 14, 20, 4, &level_data[current_level].map[14*20], offset);
   for (char i=0; i < 4; i++){
     scroll_bkg(0, 8);
     play_moving_sound();
-    wait(20);
+    input = wait(20);
+    if (input & (J_START | J_A | J_B)){
+      return;
+    }
   }
 
   move_win(7, 120);
