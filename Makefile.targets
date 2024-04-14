@@ -5,7 +5,7 @@ CFLAGS += -m$(PORT):$(PLAT)
 endif
 endif
 
-VERSION = 0.3
+VERSION = 0.3.1
 
 # Called by the individual targets below to build a ROM
 build-target: $(BINS)

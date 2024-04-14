@@ -1657,7 +1657,7 @@ void main(void){
 
       if (stop_play == 1) {
         flash_sprites();
-        lives -= 1;
+        // lives -= 1;  // Removed for v0.3.1
         stop_play = 0;
       }
       else if (stop_play == 2){
